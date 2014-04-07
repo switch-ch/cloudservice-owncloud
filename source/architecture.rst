@@ -216,6 +216,19 @@ The current setup is not HA (high-availability) one. While it certainly would be
 possible to build a complete HA setup, we have decided against this for a number
 of reasons:
 
+  * We don't expect the virtual machines to fail. If hardware fails, it will be
+    the physical hypervisors. In the current (smallish) deployment, there are not 
+    enough machines to make the failure of just one not taking down multiple of
+    the ownCloud VMs.
+  * IP failover in the OpenStack environment is a bit complicated (we can use
+    the ``nova`` command line API to switch a floating IP to another VM, but this
+    is not well integrated with the common HA solutions (``hearbeat/corosync`` or 
+    ``keepalived``
+ 
+In case of failure of a physical host or a VM, we are prepared to experience some
+downtime. In case of a failed host, the dead VMs can be restarted on another physical
+host or rebuilt using the ansible scripts within a few minutes. 
+
 
 
 .. links
