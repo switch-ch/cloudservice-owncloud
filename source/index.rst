@@ -1,4 +1,4 @@
-.. OwnCloud Black Book documentation master file, created by
+.git@github.com:switch-ch/cloudservice-owncloud.git. OwnCloud Black Book documentation master file, created by
    sphinx-quickstart on Wed Mar 26 17:16:26 2014.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
@@ -14,6 +14,7 @@ Contents:
    intro
    architecture
    installation
+   experiences
 
 Indices and tables
 ==================

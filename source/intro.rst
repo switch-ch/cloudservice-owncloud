@@ -23,7 +23,9 @@ of guides for various services that cover items from the following list:
 * Tariff Models
 * Real World Experiences / Use Cases
 
-This book specifically covers a file sharing service based on ownCloud_
+This book specifically covers a file sync and share service based on ownCloud_.
+However, the non-technical chapters are applicable to other sync & share
+services.
 
 Audience
 --------
