@@ -7,19 +7,19 @@ Prerequisites
 Software
 ^^^^^^^^
 
-You will need to have installed Git_ and Ansible_ 1.4/1.5 installed on your
+You will need to have Git_ and Ansible_ 1.4/1.5 installed on your
 local machine. `Ansible installation`_ takes you through the steps to get
 Ansible up and running on your local machine.
 
 SSH configuration
 ^^^^^^^^^^^^^^^^^
 
-If you use an OpenStack based cloud environment, the various virtual machines
-won't have any public IP addresses (except for the loadbalancer). In order to
-get SSH access to the VMs, you will need to do a bit of configuriation on a
+If you use an OpenStack-based cloud environment, the various virtual machines
+won't have any public IP addresses (except for the load balancer). In order to
+get SSH access to the VMs, you will need to do a bit of configuration on a
 jumposthost  SWITCHcloud to host the virtual machines, you will need to add
 the following to your ``~/.ssh/config`` to get direct SSH access to the
-10.0.20.0/24 net (or whatever it is in your configuration), the VMs run on::
+10.0.20.0/24 net (or whatever it is in your configuration) the VMs run on::
 
   Host *.example.ch
     ForwardAgent yes
@@ -55,17 +55,15 @@ The project is set up with several folders and files:
   * backups - will hold the downloaded database backup files (empty at start)
   * group_vars - variables for the different server groups (mostly open tcp/udp ports)
   * library - additional ansible tasks
-  * roles - the meat of the configuration. Contains the setup instructions for the different roles 
+  * roles - the meat of the configuration. Contains the setup instructions for the different roles
   * ssl - storage for SSL certificates and keys (not checked in)
 
 Files:
- 
+
   * staging - IP addresses and config variables for **staging** environment
   * production - IP addresses and config variables for **production** environment
   * db,dev,lb,ldap,nfs,syslog,web}servers.yml - specification of the various server classes
   * various commands for [[switchdrive:commonoperations|operating]] the cluster
-
-
 
 Generate VMs
 ^^^^^^^^^^^^
@@ -90,13 +88,10 @@ Create the necessary volumes:
    * log volume (/dev/vdb on syslog server)
    * db volume (/dev/vdb on db server)
 
-
-
-
 Configuration of Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Create a **environment** file in the ansible directory. Here is an example of
+Create an **environment** file in the ansible directory. Here is an example of
 the **staging** file::
 
     [db]
@@ -135,7 +130,6 @@ the **staging** file::
     syslog
     cmd
 
-
     [staging:vars]
     service_name=drive-stage.switch.ch
     ldap_ip=10.0.20.62
@@ -147,7 +141,7 @@ the **staging** file::
     admin_pass=owncloud_admin_password
     OWNCLOUD_VERSION='6.0.2'
 
-The first part tells ansible, which virtual machine is in which group (the
+The first part tells ansible which virtual machine is in which group (the
 groups are ``[db]``, ``[web]`` etc. Note that a group can have more than one
 group (however, the setup only works for the web group having multiple servers.
 All other groups should only have one server)
@@ -156,7 +150,6 @@ The ``[staging:children]`` group collects all the servers into one group, so
 that the next section ``[staging:vars]``, the variables, are visible to all
 configured servers.
 
-
 Initial Installation on VMs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -164,7 +157,7 @@ You can either install VMs from stock Ubuntu 13.10 images or create a volume
 first, and then boot the VM from the volume.
 
 The current setup is a mix of image and volume based servers. The original
-thought was to make the servers boot from volume in order not to loose data due
+thought was to make the servers boot from volume in order not to lose data due
 to ephemeral disks being deleted. However, I am now (March 2014) in the process
 of switching the servers to being image based with the databases/persistent data
 on volumes. This makes for much easier recreation of VMs should they fail.
@@ -183,7 +176,7 @@ syslog       Image     log data stored on separate volume
 zabbix       Volume    database needs to be moved to volume 
 ============ ========= ====================================
 
-The following Volumes need to be created:
+The following volumes need to be created:
 
   * owncloud data (20TB) - nfs  /dev/vdb
   * owncloud backups (20TB) - nfs /dev/vdc
@@ -192,7 +185,7 @@ The following Volumes need to be created:
 
 and attached to the correct servers.
 
-The filesystems on the syslog and db server are created automatically by the
+The file systems on the syslog and db servers are created automatically by the
 ansible playbook. In general we create the filesystem directly on the disk,
 without partitioning it. This allows the volume to be resized without resizing a
 partition on it, which makes the process simpler.
@@ -204,8 +197,6 @@ you need to manually create that partition and format it::
     parted /dev/vdb    # and then create a logical partition
     mkfs.xfs /dev/vdb1
     mkfs.xfs /dev/vdc
-
-
 
 Manual configurations
 ^^^^^^^^^^^^^^^^^^^^^
@@ -253,8 +244,7 @@ You can (and should) edit the variables in the environment file (``staging``,
     stats_send_to=owncloud-stats@example.com
     stats_from=owncloud-stats@example.com
 
-
-    # servers mails to root (cronjobs) are sent to this address
+    # server's mails to root (cronjobs) are sent to this address
     notification_mail=drive-operations@example.com
 
 **Note** - yes it's not DRY to list the various IP addresses again, as they
@@ -296,7 +286,7 @@ the Zabbix VM::
 
 The actual Zabbix configuration needs to be done manually. In the directory
 ``roles/zabbix/files/`` there are three Zabbix exports that can be used as a
-starting point to configure the server. 
+starting point to configure the server.
 
 You will also need to grant access to two tables in the owncloud database:
 

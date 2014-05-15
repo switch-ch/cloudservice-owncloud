@@ -12,11 +12,11 @@ are running on physical hosts, if one of them breaks, then potentially multiple
 VMs are affected at the same time. For now, I choose the path of being able to
 restart the VMs on another physical host in case of failure.
 
-Common 
+Common
 ------
 
 All virtual machines are running Ubuntu 13.10 in a standard server installation.
-They have IPtables installed and only expose port 22 plus the ports necessary
+They have IPtables installed and only expose TCP port 22 plus the ports necessary
 for the service to the internal 10.0.20.0/24 network.
 
 Loadbalancer
@@ -24,38 +24,38 @@ Loadbalancer
 
 Incoming requests are handled by HAProxy_. HAProxy
 does load balancing and SSL termination. Doing SSL termination on the
-loadbalancer allows it to inject cookies into the HTTP traffic that enables it
+load balancer allows it to inject cookies into the HTTP traffic that enables it
 to provide "sticky sessions" (i.e. requests from a single client always go to
-the same web server). 
+the same web server).
 
-The haproxy log files are sent to the syslog server.
+The HAProxy log files are sent to the syslog server.
 
 HAProxy runs completely in memory and doesn't touch the disks while running. It
-uses a single threaded evented execution model and therefore is quite happy on a
+uses a single-threaded evented execution model and therefore is quite happy on a
 2 VCPU machine. To increase performance, it helps to pin the virtual CPUs to
 physical CPUs on the host running the VM.
 
 Open Ports:
 
   * 22
-  * 80 
+  * 80
   * 443
 
-Web/Applikation servers
+Web/Application servers
 -----------------------
 
 The web/application servers are handled by nginx_ and `PHP5 FPM`_.
 
-nginx is handling all incoming HTTP requests from the loadbalancer and serving
-static files (css,js as well as the actual files stored in ownCloud) and passing
-all request to ownCloud to the PHP5-FPM task.
+nginx handles all incoming HTTP requests from the load balancer, serves
+static files (css,js as well as the actual files stored in ownCloud) and passes
+all requests to ownCloud to the PHP5-FPM task.
 
 nginx is configured with 32 worker processes
 (http://wiki.nginx.org/CoreModule#worker_processes) in order to maximize the
 amount of files that can be sent when waiting for disk io.
 
 PHP-FPM spawns a number of PHP worker processes on startup and manages them
-automatically (spawning more if the load rises and killing them again, if load
+automatically (spawning more if the load rises and killing them again if load
 decreases). The goal is to have a PHP process ready whenever a request comes in.
 (The process manager will always keep 8 PHP processes running and spawn up to 30
 processes when under load)
@@ -63,10 +63,10 @@ processes when under load)
 Each web server mounts the ownCloud data directory as ``/mnt/data`` from the NFS
 server.
 
-The ownCloud logfiles are sent to the Syslog server
+The ownCloud logfiles are sent to the syslog server
 
 The web servers are 8 VCPU, 16GB RAM virtual machines. The amount of RAM is so
-high, because ownCloud allows large files to be uploaded through the web UI. The
+high because ownCloud allows large files to be uploaded through the web UI. The
 maximal file size is 4GB, but during the upload, the file is in memory. Lower
 amounts of RAM could lead to situations where the memory on the server is being
 exhausted.
@@ -76,14 +76,13 @@ Open Ports:
   * 22
   * 80
 
-
 Database Server
 ---------------
 
 Instead of MySQL we have opted to use PostgreSQL (currently version 9.3) to
 store the database.
 
-The database is backed up every 6 hours via a cron tab entry. Future improvments
+The database is backed up every 6 hours via a crontab entry. Future improvments
 will include DB snapshot and WAL archiving.
 
 ownCloud is read heavy (factor 1000:1) so a possible performance option will be
@@ -115,7 +114,6 @@ Open Ports:
   * 22
   * 5432
 
-
 NFS Server
 ----------
 
@@ -129,13 +127,13 @@ by Ceph_. It is thin provisioned and can be resized to
 accomodate for future growth.
 
 An additional 20TB volume is used for generational file system backups with
-RSnapshot_. This is mainly a safe guard for the
-case when ownCloud should loose data.
+RSnapshot_. This is mainly a safeguard for the
+case when ownCloud should lose data.
 
-There hasn't been much tuning of the NFS server yet (safe for mounting the
-volumes asynchronously) and enabling RBD caching for the VM. The clients uses
+There hasn't been much tuning of the NFS server yet (save for mounting the
+volumes asynchronously and enabling RBD caching for the VM). The clients use
 1MB large read and write buffers when mounting the NFS server. Benchmarks have
-shown that the NFS server can write around 120MB/s which should be enough for
+shown that the NFS server can write around 120MB/s, which should be enough for
 now.
 
 On initial syncs or rapid reads of ownCloud data, we notice huge spikes of CPU
@@ -183,8 +181,9 @@ The cloud id server is used to bridge between AAI and the LDAP server. External
 users can login with AAI and are able to create a new account (that will be
 commissioned on the LDAP server) or to reset their password.
 
-The server is running a Ruby on Rails application developed by InEn. It uses
-Apache and mod_shib, and xxx as its database.
+The server runs a Ruby on Rails application developed by SWITCH's
+Interaction Enabling team. It uses Apache and mod_shib, and xxx as its
+database.
 
 Open Ports:
 
@@ -217,26 +216,26 @@ possible to build a complete HA setup, we have decided against this for a number
 of reasons:
 
   * We don't expect the virtual machines to fail. If hardware fails, it will be
-    the physical hypervisors. In the current (smallish) deployment, there are not 
+    the physical hypervisors. In the current (smallish) deployment, there are not
     enough machines to make the failure of just one not taking down multiple of
     the ownCloud VMs.
   * IP failover in the OpenStack environment is a bit complicated (we can use
     the ``nova`` command line API to switch a floating IP to another VM, but this
-    is not well integrated with the common HA solutions (``hearbeat/corosync`` or 
+    is not well integrated with the common HA solutions (``hearbeat/corosync`` or
     ``keepalived``
- 
+
 In case of failure of a physical host or a VM, we are prepared to experience some
 downtime. In case of a failed host, the dead VMs can be restarted on another physical
-host or rebuilt using the ansible scripts within a few minutes. 
+host or rebuilt using the ansible scripts within a few minutes.
 
 
 
 .. links
 
 .. _HAProxy: http://haproxy.1wt.eu/
-.. _nginx: http://nginx.org/ 
-.. _`PHP5 FPM`: http://php-fpm.org/ 
-.. _PostgreSQL: http://www.postgresql.org/ 
+.. _nginx: http://nginx.org/
+.. _`PHP5 FPM`: http://php-fpm.org/
+.. _PostgreSQL: http://www.postgresql.org/
 .. _`PGPool II`: http://www.pgpool.net/mediawiki/index.php/Main_Page
 .. _RBD: http://ceph.com/docs/master/rbd/rbd/
 .. _Ceph: http:/ceph.com
