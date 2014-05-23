@@ -15,6 +15,21 @@ Installation is left up to the reader. **Note**: In order to *contribute writing
 you don't need to actually install any software. A texteditor is all you will need
 (or you can edit directly in the WebGUI of SWITCHdrive).
 
+A note on installation:
+
+On Mac OSX (Mavericks):
+Install Python (with homebrew)
+
+   # install / update easy_install
+   curl https://bootstrap.pypa.io/ez_setup.py -o - | python   
+
+   # install sphinx
+   easy_install -U sphinx
+
+   # install cloudtheme
+   easy_install cloud_sptheme
+
+
 There are two main directories: ``source`` and ``build``. ``source`` contains the 
 actual text, ``build`` contains the compiled documentation in various
 formats.
