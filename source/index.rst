@@ -12,8 +12,9 @@ Contents:
    :maxdepth: 2
 
    intro
-   architecture
-   installation
+   service-description
+   switch/architecture
+   switch/installation
    experiences
 
 Indices and tables
