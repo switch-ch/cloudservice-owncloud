@@ -39,9 +39,9 @@ History
 This book is a collaborative effort of the European NREN community, organized
 in TERENA and GEANT. It has started as a project of the GN3+ SA7 project.
 
-The technical parts are based on the implementation of ownCloud at SWITCH (with
-the SWITCHdrive_ project) and CESNET. It can serve as one example of how one might
-technically build such a service.
+The technical parts are based on the implementation of ownCloud at SWITCH
+(SWITCHdrive_) and CESNET (`ownCloud@CESNET`_). It can serve as one
+example of how one might technically build such a service.
 
 Authors
 -------
