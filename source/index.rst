@@ -16,6 +16,10 @@ Contents:
    switch/architecture
    switch/installation
    experiences
+   cesnet/architecture
+   cesnet/installation
+   cesnet/modifications
+   cesnet/experiences
 
 Indices and tables
 ==================
