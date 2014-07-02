@@ -6,40 +6,147 @@ ownCloud service at CESNET.
 
 .. image:: images/architecture/CesnetOcArchitecture1.0.png
 
-Our ownCloud architecture is built around HA (High Availability) cluster,
-which is managed by Pacemaker_. The cluster consists of 5 equivalent nodes.
-Pacemaker assigns owncloud and postgres service to one of the front-end nodes.
-All nodes are physical non-virtualized machines.
+Our ownCloud architecture is built on top of HA (High Availability) cluster
+managed by Pacemaker_. Cluster consists of 5 equivalent nodes.
+Pacemaker ensures that ownCloud and Postgres is running on one
+of the front-end nodes. All nodes are physical machines.
 
 Specs
 ------
 
-Hardware specifications for all front-ends are as follows:
+Hardware specifications for each front-end are as follows:
 
   * CPU: 2 x Intel(R) Xeon(R) CPU E5-2620 0 @ 2.00GHz (24 CPUs)
-  * RAM: 96 GB
-  * NET: 8 Gbps
+  * RAM: 96 GB (~ 40 GB free to use)
+  * NETWORK: 2 x 10 GE (bonded)
 
+GPFS is being used as an underlying filesystem. OwnCloud utilizes a dedicated
+40 TB volume which is mounted on all front-ends. The IBM DCS3700 disk array
+is being used for storage.
 
+All front-end nodes are running Red Hat Enterprise Linux 6 with Red Hat subscription.
 
 Application Server
 ------------------
 
+OwnCloud application is handled by Apache_ 2.2 and PHP_ 5.4
+(which has been installed from nonstandard repository -- see this guide_).
+
+Newer PHP version was used instead of default PHP 5.3 version to allow
+uploads of files larger than 2 GB. There were problems with this in 5.3.X series.
+With PHP 5.4, we are able to do 16 GB uploads with essentially no problems at all.
+
+Apache is running as a standalone server without any proxies in the way. It is
+listening on port 80 and 443. HTTPS is being forced by redirection from
+80 to 443.
+
+Complete Apache + PHP configuration and website root is located on a shared GPFS volume,
+which is mounted on all nodes to ``/gpfs/owncloud/``.
+
+Apache is configured to use the default **prefork** MPM module for handling requests.
+However, its configuration has been tweaked to match nodes specs and current load::
+        <IfModule prefork.c>
+        StartServers         500
+        MinSpareServers       10
+        MaxSpareServers       30
+        ServerLimit         1800
+        MaxClients          1600
+        MaxRequestsPerChild 8000
+        </IfModule>
+Since we have quite a lot of RAM available, we beefed up the maximum number of workers
+to 1600, so it uses up to 40 GB of RAM with some reserve (one Apache process takes 22 MB in average).
+In order to handle a load peak afer server restart, when user clients start reconnecting, the
+**StartServers** directive is set quite high too.
+
+PHP is set up with `Zend OPcache`_ module for better overall performance and `mod_xsendfile`_, which is being
+used for faster file downloads.
+
+Open Ports:
+
+  * 80
+  * 443
+
 Database Server
 ---------------
+
+PostgreSQL_ 8.4 is being used as a database server of choice. This is the highest version available
+in standard RHEL 6 repositories. Database server runs as a single instance on a
+different node than Apache instance and without any replication yet (we are planning an upgrade to 9.2
+and replication setup in future).
+
+OwnCloud application doesn't access the PostgreSQL instance directly. It sends its queries
+through `PgPool II`_, which acts as a connection cache (runs in *Connection Pooling* mode).
+This gives us some performance boost and it reduces database instance load at the same time.
+PgPool runs together with the Apache instance.
+
+PostgreSQL settings are set according to pgtune_ utility recommendation. It has allocated
+40 GB of RAM, same as the Apache instance, and maximum numer of connections is set to **51**
+(mostly based on this recommendation_).
+
+Database server has its data and configuration stored on a shared GPFS volume like the Apache server.
+
+Open Ports:
+
+  * 5432
+  * 5433 (PgPool)
 
 High Availability
 -----------------
 
+*Pacemaker resources setup, resource agents - @berosek*
+
 User Authentication
 -------------------
+
+Authentication of users is based on SAML. It relies on the SimpleSAMLphp_ backend application.
+SimpleSAMLphp backend is configured with eduID_ and eduGAIN_ metadata.
+We are thus accepting users coming from these two identity federations.
+
+There are basically two available user backends for ownCloud, which allows federated
+identities to log in -- `user_saml`_ and `user_shibboleth`_. Both of them are quite outdated
+and not supported in ownCloud 6. We have picked the *user_saml* app and fixed an issues it 
+had with OC 6.
 
 Data Storage
 ------------
 
+*GPFS storage and backups - @podzim*
+
 Monitoring
 ----------
 
+Both Apache and PostgreSQL instances are constantly monitored by Icinga_ (fork of Nagios).
+Following items are being checked:
+
+  * SSL certificate validity
+  * WebDAV file transfers
+  * free space on OC GPFS volume
+  * HTTP[S] protocol (Apache responding)
+  * PING (machine with owncloud-ip responding)
+  * PostgreSQL (Postgres is running and OC can connect to the database)
+
+In addition to this, we use custom Munin_  plugin to collect usage statistics
+and create graphs. We have currently graps for the following ownCloud statistics:
+
+  * Number of user accounts
+  * Number of files
+
+
 .. links
 .. _Pacemaker: http://clusterlabs.org/quickstart-redhat.html
-
+.. _Apache: https://httpd.apache.org/
+.. _PHP: http://www.php.net/
+.. _guide: http://developerblog.redhat.com/2013/08/01/php-5-4-on-rhel-6-using-rhscl/
+.. _`Zend OPcache`: http://pecl.php.net/package/ZendOpcache
+.. _`mod_xsendfile`: https://tn123.org/mod_xsendfile/
+.. _PostgreSQL: http://www.postgresql.org/
+.. _`PgPool II`: http://www.pgpool.net/mediawiki/index.php/Main_Page
+.. _pgtune: http://pgtune.leopard.in.ua/
+.. _recommendation: http://wiki.postgresql.org/wiki/Number_Of_Database_Connections#How_to_Find_the_Optimal_Database_Connection_Pool_Size
+.. _SimpleSAMLphp: https://simplesamlphp.org/
+.. _eduId: http://eduid.cz/
+.. _eduGAIN: http://www.geant.net/service/eduGAIN/Pages/home.aspx
+.. _`user_saml`: https://github.com/owncloud/apps/tree/master/user_saml
+.. _`user_shibboleth`: https://github.com/AndreasErgenzinger/user_shibboleth
+.. _Icinga: https://www.icinga.org/
+.. _Munin: http://munin-monitoring.org/
