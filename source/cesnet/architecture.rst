@@ -83,7 +83,7 @@ PostgreSQL settings are set according to pgtune_ utility recommendation. It has 
 40 GB of RAM, same as the Apache instance, and maximum numer of connections is set to **51**
 (mostly based on this recommendation_).
 
-Database server has its data and configuration stored on a shared GPFS volume like the Apache server.
+Database server has its data and configuration stored on a shared GPFS volume just like the Apache server.
 
 Open Ports:
 
@@ -130,7 +130,7 @@ and create graphs. We have currently graps for the following ownCloud statistics
 
   * Number of user accounts
   * Number of files
-
+  * Amount of user data stored
 
 .. links
 .. _Pacemaker: http://clusterlabs.org/quickstart-redhat.html
