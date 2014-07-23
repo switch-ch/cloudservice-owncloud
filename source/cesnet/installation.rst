@@ -27,10 +27,13 @@ We like to place everything related to ownCloud on a shared filesystem mounted o
 This allows Pacemaker to move services between the nodes freely if one of them fails,
 and thus to achieve High Availability.
 GPFS filesystem creation and mounting on all nodes is described on the `IBM wiki`_.
-We created a filesystem named *owncloud* and mounted it into *gpfs* directory.
+We created a filesystem named *owncloud* and mounted it into *gpfs* directory. ::
+
+  /dev/owncloud on /gpfs/owncloud type gpfs (rw,noexec,mtime,quota=userquota;groupquota;filesetquota,dev=owncloud)
+
 
 With filesystem prepared, you will need to download `ownCloud 6.0.3`_ source archive.
-Extract the archive into your shared filesystem. ::
+Extract the archive into your shared filesystem: ::
 
   mkdir /gpfs/owncloud/www/
   cd /gpfs/owncloud/www/
@@ -48,6 +51,11 @@ You can install these apps by running: ::
 Now you should have ownCloud sources prepared, but you still need
 to install and configure the Apache server together with PostgreSQL.
 For this task we use Puppet.
+
+SimplesamlPHP
+^^^^^^^^^^^^^
+
+You will also need to download the SimplesamlPHP authentication backend
 
 Puppet
 ^^^^^^
@@ -179,6 +187,19 @@ configuration into that volume (``/gpfs/owncloud/etc/...``).
 
 Pacemaker
 ^^^^^^^^^
+
+TODO: we are changing our pacemaker configuration right now. This section
+will be added when things get sorted out.
+
+Configuration
+-------------
+
+ownCloud
+^^^^^^^^
+
+User_saml
+^^^^^^^^^
+
 
 
 .. links

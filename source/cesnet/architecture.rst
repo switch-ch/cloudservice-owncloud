@@ -110,7 +110,21 @@ had with OC 6.
 Data Storage
 ------------
 
-*GPFS storage and backups - @podzim*
+All the data is stored in GPFS (v 3.5.0.7), so all nodes in the cluster see the same data.
+We have a filesystem dedicated for ownCloud, currently provisioned for 40TB. This filesystem
+utilizes 4 RAID6 arrays from IBM DCS3700 disk array, which is connected through Fibre Channel
+with all the frontend nodes. We use this filesystem for apache logs, Postgres database datafiles
+and of course ownCloud data. Filesystem is configured with 2MB blocksize, which might seem too much,
+but since our users create a lot of small files as well as files in order of gigabytes, this value has proven adequate.
+
+Backups are realized using GPFS utility mmbackup. This utility scans the whole filesystem (using GPFS
+inode scan interface) and backs up the changed or new files to Tivoli Storage Manager server. It uses
+TSM's selective backup, so even if a file changes, it is backed up as a whole again. We retain up to 2
+versions of the backed file, for 60 days. We are using TSM 6.3.3 with IBM TS3500 tape library and seven IBM
+3592 drives. These backups are run once a day from a cron job.
+
+We also backup the Postgres database using pg_dump utility, once a day. Pg_dump generates the archive and
+mmbackup finds this new file on the GPFS filesystem and backs it up with the rest of ownCloud files.
 
 Monitoring
 ----------
