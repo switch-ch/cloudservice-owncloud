@@ -13,14 +13,14 @@ Goals
 
 As we NRENs start to implement cloud services, we are all facing similar
 challenges and problems. In order to reduce the amount of separate work,
-discovery and solving of problemns, the NREN community is collaborating on a set
+discovery and solving of problems, the NREN community is collaborating on a set
 of guides for various services that cover items from the following list:
 
 * Service Definition
 * Implementation
 * Operations
 * Legal Aspects / SLA
-* Tariff Models
+* Tariff and Business Models
 * Real World Experiences / Use Cases
 
 This book specifically covers a file sync and share service based on ownCloud_.
@@ -47,7 +47,7 @@ Authors
 -------
 
 * `Jens-Christian Fischer <jens-christian.fischer@switch.ch>`_
-* Your name here
+* `Patrik Schnellmann <patrik.schnellmann@switch.ch>`_
 
 .. links
 
