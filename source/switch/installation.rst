@@ -1,5 +1,5 @@
-Installation
-============
+SWITCHdrive Installation
+========================
 
 Prerequisites
 -------------
