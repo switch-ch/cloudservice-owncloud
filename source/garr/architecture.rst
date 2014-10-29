@@ -139,8 +139,8 @@ The goal is to have a PHP process ready whenever a request comes in.
 The process manager will always keep 8 PHP processes running 
 and spawn up to 30 processes when under load.
 
-Each web server mounts the ownCloud data directory as 
-``/var/www/owncloud/data`` from the storage pool. 
+Each web server mounts the ownCloud data directory from the storage
+pool (e.g., as ``/opt/owncloud/data``).
 Inside that global mount point, storing the ownCloud entry points 
 for the actual users' locations, there is an additional mount 
 point for every volume assigned to a GARRbox subscriber. 
@@ -164,7 +164,7 @@ and one back-up VM.
 
 Open Ports (only to the internal network):
   * 22
-  * 80
+  * 443
 
 Database cluster
 ----------------
