@@ -221,7 +221,7 @@ of reasons:
     the ownCloud VMs.
   * IP failover in the OpenStack environment is a bit complicated (we can use
     the ``nova`` command line API to switch a floating IP to another VM, but this
-    is not well integrated with the common HA solutions (``hearbeat/corosync`` or
+    is not well integrated with the common HA solutions (``heartbeat/corosync`` or
     ``keepalived``
 
 In case of failure of a physical host or a VM, we are prepared to experience some
