@@ -4,7 +4,7 @@ SWITCHdrive Architecture
 
 The following picture shows the current architecture diagram.
 
-.. image:: images/architecture/Architekturdiagramm0.7.png
+.. image:: images/architecture/Architekturdiagramm07.png
 
 
 The current architecture is not HA (High Availability) enabled. As all the VMs
