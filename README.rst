@@ -18,7 +18,9 @@ you don't need to actually install any software. A texteditor is all you will ne
 A note on installation:
 
 On Mac OSX (Mavericks):
-Install Python (with homebrew)
+
+* Install Python (with homebrew)
+* Install MacTex: http://tug.org/mactex/
 
    # install / update easy_install
    curl https://bootstrap.pypa.io/ez_setup.py -o - | python   
