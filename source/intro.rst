@@ -2,8 +2,8 @@ Introduction
 ============
 
 
-Licencse
---------
+Licence
+-------
 
 This book is licensed under a `Creative Commons Attribution/Share-Alike (BY-SA)
 license <http://creativecommons.org/licenses/by-sa/3.0/>`__.
@@ -43,13 +43,20 @@ The technical parts are based on the implemention of ownCloud at SWITCH, with
 the SWITCHdrive_ project. It can serve as one example of how one might
 technically build such a service.
 
+As of October 2014 a section describing the implementation of ownCloud at GARR,
+with the GARRbox_ service, has been added.
+
+
 Authors
 -------
 
 * `Jens-Christian Fischer <jens-christian.fischer@switch.ch>`_
 * `Patrik Schnellmann <patrik.schnellmann@switch.ch>`_
+* `the GARRbox team <garrbox-service@garr.it>`_
+* Your name here
 
 .. links
 
 .. _ownCloud: http://owncloud.org
 .. _SWITCHdrive: http://switch.ch/drive
+.. _GARRbox: http://garrbox.garr.it/
