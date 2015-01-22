@@ -15,6 +15,8 @@ Contents:
    service-description
    switch/architecture
    switch/installation
+   garr/architecture
+   garr/installation
    experiences
    cesnet/architecture
    cesnet/installation

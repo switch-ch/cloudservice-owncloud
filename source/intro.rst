@@ -2,8 +2,8 @@ Introduction
 ============
 
 
-Licencse
---------
+Licence
+-------
 
 This book is licensed under a `Creative Commons Attribution/Share-Alike (BY-SA)
 license <http://creativecommons.org/licenses/by-sa/3.0/>`__.
@@ -20,7 +20,7 @@ of guides for various services that cover items from the following list:
 * Implementation
 * Operations
 * Legal Aspects / SLA
-* Tariff Models
+* Tariff and Business Models
 * Real World Experiences / Use Cases
 
 This book specifically covers a file sync and share service based on ownCloud_.
@@ -40,13 +40,18 @@ This book is a collaborative effort of the European NREN community, organized
 in TERENA and GEANT. It has started as a project of the GN3+ SA7 project.
 
 The technical parts are based on the implementation of ownCloud at SWITCH
-(SWITCHdrive_) and CESNET (`ownCloud@CESNET`_). It can serve as one
-example of how one might technically build such a service.
+(SWITCHdrive_). It can serve as one example of how one might technically build such a service.
+
+As of October 2014 a section describing the implementation of ownCloud at GARR,
+with the GARRbox_ service, has been added.
+
 
 Authors
 -------
 
 * `Jens-Christian Fischer <jens-christian.fischer@switch.ch>`_
+* `Patrik Schnellmann <patrik.schnellmann@switch.ch>`_
+* `the GARRbox team <garrbox-service@garr.it>`_
 * `Miroslav Bauer <bauer@cesnet.cz>`_
 * Your name here
 
@@ -55,3 +60,4 @@ Authors
 .. _ownCloud: http://owncloud.org
 .. _SWITCHdrive: http://switch.ch/drive
 .. _ownCloud@CESNET: https://owncloud.cesnet.cz
+.. _GARRbox: http://garrbox.garr.it/
