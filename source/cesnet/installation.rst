@@ -1,5 +1,5 @@
-Installation
-============
+CESNET Installation
+===================
 
 Prerequisites
 -------------

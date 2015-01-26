@@ -1,5 +1,5 @@
-Service Architecture at CESNET
-===============================
+CESNET Architecture
+===================
 
 The following picture shows the current architecture diagram for
 ownCloud service at CESNET.
@@ -59,7 +59,7 @@ In order to handle a load peak afer server restart, when user clients start reco
 **StartServers** directive is set quite high too.
 
 PHP is set up with `Zend OPcache`_ module for better overall performance and `mod_xsendfile`_, which is being
-used for faster file downloads.
+used for faster file downloads (also enables pause/resume of downloads).
 
 Open Ports:
 
@@ -71,17 +71,17 @@ Database Server
 
 PostgreSQL_ 8.4 is being used as a database server of choice. This is the highest version available
 in standard RHEL 6 repositories. Database server runs as a single instance on a
-different node than Apache instance and without any replication yet (we are planning an upgrade to 9.2
-and replication setup in future).
+different node than Apache instance and without any replication yet (we are planning an upgrade to 9.4
+and a streaming replication setup in the future).
 
 OwnCloud application doesn't access the PostgreSQL instance directly. It sends its queries
-through `PgPool II`_, which acts as a connection cache (runs in *Connection Pooling* mode).
+through `PgPool II`_, which acts as a connection cache (runs in the *Connection Pooling* mode).
 This gives us some performance boost and it reduces database instance load at the same time.
-PgPool runs together with the Apache instance.
+PgPool runs with the Apache instance on the same node.
 
-PostgreSQL settings are set according to pgtune_ utility recommendation. It has allocated
+PostgreSQL settings are mostly set according to the pgtune_ utility recommendations. It has allocated
 40 GB of RAM, same as the Apache instance, and maximum numer of connections is set to **51**
-(mostly based on this recommendation_).
+(mostly based on this recommendations_).
 
 Database server has its data and configuration stored on a shared GPFS volume just like the Apache server.
 
@@ -156,7 +156,7 @@ and create graphs. We have currently graps for the following ownCloud statistics
 .. _PostgreSQL: http://www.postgresql.org/
 .. _`PgPool II`: http://www.pgpool.net/mediawiki/index.php/Main_Page
 .. _pgtune: http://pgtune.leopard.in.ua/
-.. _recommendation: http://wiki.postgresql.org/wiki/Number_Of_Database_Connections#How_to_Find_the_Optimal_Database_Connection_Pool_Size
+.. _recommendations: http://wiki.postgresql.org/wiki/Number_Of_Database_Connections#How_to_Find_the_Optimal_Database_Connection_Pool_Size
 .. _SimpleSAMLphp: https://simplesamlphp.org/
 .. _eduId: http://eduid.cz/
 .. _eduGAIN: http://www.geant.net/service/eduGAIN/Pages/home.aspx

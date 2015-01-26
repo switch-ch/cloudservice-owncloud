@@ -9,15 +9,16 @@ Welcome to OwnCloud Black Book's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    intro
    service-description
+   experiences
    switch/architecture
    switch/installation
    garr/architecture
    garr/installation
-   experiences
+   cesnet/service-description
    cesnet/architecture
    cesnet/installation
    cesnet/modifications

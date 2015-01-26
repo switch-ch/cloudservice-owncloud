@@ -1,4 +1,4 @@
-CESNET's modifications to ownCloud
+CESNET Modifications to ownCloud
 ==================================
 
 User Authentication and Management
