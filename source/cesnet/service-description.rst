@@ -14,7 +14,7 @@ each new account is given a 100 GB quota.
 
 Our ownCloud service can be used as:
 
-* Backup platform (all stored data is backed up on tapes)
+* Backup platform (all stored data is backed up to tapes)
 * Collaboration platform (file sharing and collaborative document editing)
 * Local cloud storage platform (synchronization between clients, all data stored in the territory of the Czech Republic)
 

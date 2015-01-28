@@ -21,6 +21,7 @@ Our system consists of the following components and services:
 * Icinga & Munin monitoring servers
 * eduID and eduGAIN authentication services
 * GPFS storage
+* TSM server for backups
 
 Specs
 ------
@@ -80,22 +81,27 @@ Open Ports:
 Database Server
 ---------------
 
-PostgreSQL_ 8.4 is being used as a database server of choice. This is the highest version available
-in standard RHEL 6 repositories. Database server runs as a single instance, always on a
-different node than the Apache instance and without any replication yet (we are planning an upgrade to 9.4 and a streaming replication setup in the future).
+PostgreSQL_ 8.4 is being used as a database server of choice. This is the highest version
+available in standard RHEL 6 repositories. Database server runs as a single instance, always on a
+different node than the Apache instance and without any replication yet. We are planning
+an upgrade to 9.4 and a hot-standby streaming replication setup with load balancing. We expect
+this to help us in the future with a read heavy nature of ownCloud queries, but as of now the current setup copes with the load just fine.
 
 OwnCloud PHP application doesn't access the PostgreSQL instance directly. It sends its queries
 through `PgPool II`_, which acts as a connection cache (runs in the *Connection Pooling* mode).
-This gives us some performance boost as it reduces database instance load and reuses existing connections. PgPool is run together with the Apache instance on the same node.
+This gives us some performance boost as it reduces database instance load and reuses existing connections (thus saving a cost of creating new ones). PgPool is run together with the Apache instance on the same node.
 
-PostgreSQL engine parameters are mostly set according to the pgtune_ utility recommendations. It has allocated 40 GB of RAM, same as the Apache instance, and a maximum numer of connections is set to **51** (mostly based on this recommendations_).
+PostgreSQL engine parameters are mostly set according to the pgtune_ utility recommendations.
+It has allocated 40 GB of RAM, same as the Apache instance, and a maximum numer of connections
+ is set to **51** (mostly based on this recommendations_).
 
-Database server has its data and configuration stored on a shared GPFS volume just like the Apache server.
+Database server has its data and configuration stored on a shared GPFS volume just like the
+Apache server does.
 
 Open Ports:
 
   * 5432
-  * 5433 (PgPool)
+  * 5433 (PgPool II)
 
 High Availability
 -----------------
@@ -105,50 +111,60 @@ High Availability
 User Authentication
 -------------------
 
-Authentication of users is based on SAML. It relies on the SimpleSAMLphp_ backend application.
-SimpleSAMLphp backend is configured with eduID_ and eduGAIN_ metadata.
-We are thus accepting users coming from these two identity federations.
+Authentication of users is based on SAML. It relies on the SimpleSAMLphp_ backend application for 
+authentication and providing user's metadata. SimpleSAMLphp backend is configured with eduID_ and 
+eduGAIN_ IdP (Identity Providers) metadata and acts like SP (Service Provider) in the federations. 
+When users tries to log in, they are presented with a WAYF_ page, where they can pick their home 
+organizations. They are then redirected to their organization's IdP login page where they log in.
+After a succesfull log in, we get all information needed about a user (uid, e-mail) from
+organization's IdP.
 
 When we were looking for a solution of user authentication, there were two available
-user backends for ownCloud, which allowed federated identities to log in -- `user_saml`_ and `user_shibboleth`_. Both of them were quite outdated and not supported in ownCloud 6, however. We have picked the *user_saml* app and fixed an issues_ it had with OC 6.
+user backends for ownCloud, which allowed federated user accounts to log in -- `user_saml`_ and `user_shibboleth`_. Both of them were quite outdated and not working well in ownCloud 6, however.
+We have picked the *user_saml* app and fixed an issues_ it had with OC 6.
 
-Data Storage
-------------
+Data Storage and backup
+-----------------------
 
-All the data is stored in GPFS (v 3.5.0.7), so all nodes in the cluster see the same data.
-We have a filesystem dedicated for ownCloud, currently provisioned for 40TB. This filesystem
-utilizes 4 RAID6 arrays from IBM DCS3700 disk array, which is connected through Fibre Channel
-with all the frontend nodes. We use this filesystem for apache logs, Postgres database datafiles
-and of course ownCloud data. Filesystem is configured with 2MB blocksize, which might seem too much,
-but since our users create a lot of small files as well as files in order of gigabytes, this value has proven adequate.
+All the data is stored in a dedicated GPFS filesystem mounted on all nodes, so all
+nodes in the cluster can acces the same data. For this filesystem, we reserved 40TB of disk
+space. It's built on top of 4 RAID6 arrays from IBM DCS3700 disk array, which is connected
+through Fibre Channel to all frontend nodes. We use this filesystem for storing apache logs, PostgreSQL database datafiles and ownCloud data.
 
-Backups are realized using GPFS utility mmbackup. This utility scans the whole filesystem (using GPFS
-inode scan interface) and backs up the changed or new files to Tivoli Storage Manager server. It uses
-TSM's selective backup, so even if a file changes, it is backed up as a whole again. We retain history of 2 versions of the backed files for 60 days. We are using TSM 6.3.3 with IBM TS3500 tape library and seven IBM
-3592 drives. These backups are run once a day from a cron job.
+Data backups are realized by a GPFS utility mmbackup. This utility scans the whole filesystem
+(using GPFS inode scan interface) and passes a changed, new or deleted files to TSM (Tivoli Storage 
+Manager) server. TSM then runs selective (full) backup (or expiration when file deleted) on those files. We retain a history of 2 versions of the backed files in TSM for 30 days. TSM is being used with IBM TS3500 tape library as a persistent storage device for holding backups. OwnCloud backups are run periodically once a day.
 
-We also backup the Postgres database using pg_dump utility, once a day. Pg_dump generates the archive and
-mmbackup finds this new file on the GPFS filesystem and backs it up with the rest of ownCloud files.
+Before each backup run, PostgreSQL database is being dumped using pg_dump utility.
+Pg_dump generates the archive and mmbackup then finds this file on the GPFS filesystem
+and sends it to TSM with the rest of ownCloud files to be backed up.
 
 Monitoring
 ----------
 
-Both Apache and PostgreSQL instances are constantly monitored by Icinga_ (fork of Nagios).
-Following items are being checked:
+All ownCloud specific services are constantly monitored by Icinga_ (a fork of Nagios).
+We had to write own custom plugins to check some ownCloud specific stuff.
+Following items are being periodically checked by Icinga:
 
   * SSL certificate validity
-  * WebDAV file transfers
-  * free space on OC GPFS volume
-  * HTTP[S] protocol (Apache responding)
+  * WebDAV client functioning properly
+  * Free space on OC GPFS volume
+  * Apache responding on HTTPS
   * PING (machine with owncloud-ip responding)
-  * PostgreSQL (Postgres is running and OC can connect to the database)
+  * PostgreSQL (Postgres is responding on postgres-ip and OC can connect to the database)
 
-In addition to this, we use custom Munin_  plugin to collect usage statistics
-and create graphs. We have currently graps for the following ownCloud statistics:
+In addition to this, we use custom Munin_  plugins to collect usage statistics
+and create graphs. Currently we are graphing the following ownCloud statistics:
 
   * Number of user accounts
   * Number of files
   * Amount of user data stored
+  * Apache response times
+  * Bytes transferred by Apache
+  * Filesystem space used
+
+We are also collecting all relevant logs to a central server, where it could be
+further analyzed and queried by LogStash and ElasticSearch.
 
 .. links
 .. _Pacemaker: http://clusterlabs.org/quickstart-redhat.html
@@ -166,6 +182,7 @@ and create graphs. We have currently graps for the following ownCloud statistics
 .. _eduGAIN: http://www.geant.net/service/eduGAIN/Pages/home.aspx
 .. _`user_saml`: https://github.com/owncloud/apps/tree/master/user_saml
 .. _`user_shibboleth`: https://github.com/AndreasErgenzinger/user_shibboleth
+.. _WAYF: https://www.eduid.cz/en/tech/wayf
 .. _Icinga: https://www.icinga.org/
 .. _Munin: http://munin-monitoring.org/
 .. _issues: https://github.com/owncloud/apps/pull/1681
