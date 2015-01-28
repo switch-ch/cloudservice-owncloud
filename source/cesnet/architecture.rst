@@ -10,7 +10,8 @@ Our ownCloud architecture is built on top of HA (High Availability) cluster
 managed by Pacemaker_. Cluster consists of 5 equivalent nodes.
 Pacemaker ensures that ownCloud and other relevant services are running
 properly even if one or more front-end dies. All nodes are physical machines,
-currently there is no virtualization at all.
+currently there is no virtualization at all. Key feature of our architecture
+is that all nodes are equal as each one can take any role (be it app server or DB server).
 
 Our system consists of the following components and services:
 
@@ -29,14 +30,14 @@ Specs
 Hardware specifications for each front-end are as follows:
 
   * CPU: 2 x Intel(R) Xeon(R) CPU E5-2620 0 @ 2.00GHz (24 CPUs)
-  * RAM: 96 GB (~ 40 GB free to use)
+  * RAM: 96 GB (~ 40 GB ownCloud-dedicated)
   * Network: 2 x 10 GE (bonded)
 
 GPFS is being used as an underlying filesystem. OwnCloud utilizes a dedicated
 40 TB volume which is mounted on all front-ends. The IBM DCS3700 disk array
 is being used for data storage.
 
-All front-end nodes are running Red Hat Enterprise Linux 6 with Red Hat subscription.
+All front-end nodes are running Red Hat Enterprise Linux 6.
 
 Application Server
 ------------------
@@ -46,7 +47,7 @@ OwnCloud application is handled by Apache_ 2.2 and PHP_ 5.4
 
 Newer PHP version was used instead of default PHP 5.3 (on RHEL 6) version to allow
 uploads of files larger than 2 GB. There were problems with this in 5.3.X series.
-With PHP 5.4, we are able to do up to 16 GB uploads with no problems at all.
+We are able to do up to 16 GB uploads on PHP5.4 with no problems at all.
 
 Apache is running as a standalone server without any HTTP(S) proxies in the way. It is
 listening on port 80 and 443. HTTPS is being forced by redirection from 80 to 443.
@@ -71,7 +72,7 @@ worker proccess takes 22 MB in average).
 In order to handle a peak load afer a server restart, when user's sync clients starts
 reconnecting, the **StartServers** directive is set quite high too.
 
-Apache is set up with `Zend OPcache`_ module for better PHP performance and `mod_xsendfile`_, which is being used for faster file downloads (also enables to pause/resume downloads).
+Apache is set up with `Zend OPcache`_ module for better PHP performance and `mod_xsendfile`_, which is being used for faster file downloads (also provides users with pause/resume download capabilities).
 
 Open Ports:
 
@@ -92,8 +93,7 @@ through `PgPool II`_, which acts as a connection cache (runs in the *Connection 
 This gives us some performance boost as it reduces database instance load and reuses existing connections (thus saving a cost of creating new ones). PgPool is run together with the Apache instance on the same node.
 
 PostgreSQL engine parameters are mostly set according to the pgtune_ utility recommendations.
-It has allocated 40 GB of RAM, same as the Apache instance, and a maximum numer of connections
- is set to **51** (mostly based on this recommendations_).
+It has allocated 40 GB of RAM, same as the Apache instance, and a maximum numer of connections is set to **51** (mostly based on this recommendations_).
 
 Database server has its data and configuration stored on a shared GPFS volume just like the
 Apache server does.

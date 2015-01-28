@@ -4,6 +4,46 @@ CESNET Experiences
 This chapter discusses technical challenges we have faced and experiences
 we have gained while deploying and running the ownCloud service.
 
-User files with future timestamps
+Deployment
+~~~~~~~~~~
 
-DB bottleneck + connection creation cost
+When we started deploying the ownCloud service, Puppet made our lives much
+easier. We were benefitting from an already existing Puppet infrastructure
+and some basic Puppet modules from which we could build the service. It
+would certainly be much more uncomfortable experience to configure and
+deploy all pieces needed to each node manually (or via 'ssh in a for loop' way).
+
+Puppet automated most of the deployment tasks for us. Only thing, that we needed
+to do, was to develop modules for each service, then specify to which
+nodes to deploy the services and watch Puppet do its job. With this approach, we are able to easily add more nodes to our ownCloud cluster or to deploy the same setup onto a different site.
+
+HA configuration
+~~~~~~~~~~~~~~~~
+
+The only major things we kept away from the Puppet's reach were filesystem preparation and a Pacemaker HA configuration. Preparing a filesystem was pretty straightforward, but setting
+up a HA cluster has proven to be a major challenge for us. We had to prepare RA's (Resource
+Agents) for each component desired to run in HA mode. These agents monitors and manages (starts, stops, restarts,…) components they are assigned to. As the dependency tree (order of starting/stopping components, colocation, STONITH & failover) between those RA's grown up, things were getting rather complicated. The main source of problems was surely the RA's monitor function. Each running
+component must respond to a monitor called from a RA within a certain timeout. When monitor
+timeouts, RA declares component as failed and Pacemaker automatically stops all components
+that depends on the failed one. Althought this is a correct behavior, we were often experiencing failed monitors (and thus stopping of dependent services) when the incriminated component was working just fine. It just responded to monitor too late under some load patterns. We didn't want to set it overly high too (in order to respond to real failure quickly). It took us
+a lot of time (and a lot of hair pulled out :-)) to figure out the monitor timeouts for each RA. 
+But nowadays we can say, that it's pretty stable and behaves the way we expect it to.
+
+For the time we were running our ownCloud service, we have stumbled upon
+a handful of interesting software problems / bugs, both in ownCloud and
+synchronization clients. Some of them are described in the following section.
+
+User files coming from the future
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Among the first things we observed (and we are still observing) in our logs
+were errors like this:
+
+	{...,An exception occurred while executing 'UPDATE \"oc_filecache\" SET \"mtime\" = ?, \"etag\" = ?, \"storage_mtime\"=? WHERE \"fileid\" = ?':\n\nSQLSTATE[22003]: Numeric value out of range: 7 ERROR:  value \"5998838837323182874\" is out of range for type integer"...}
+
+
+
+Cronjob traffic jam
+~~~~~~~~~~~~~~~~~~~
+
+Cron job slowdown

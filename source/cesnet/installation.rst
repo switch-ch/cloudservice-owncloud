@@ -4,7 +4,8 @@ CESNET Installation
 Prerequisites
 -------------
 
-You will need the following software prerequisites to be installed on your nodes:
+In order to replicate our ownCloud setup, you will need the following software
+prerequisites to be installed on your designated nodes:
 
   * Puppet 2.7.x
   * Pacemaker
