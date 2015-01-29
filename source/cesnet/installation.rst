@@ -20,11 +20,11 @@ at your disposal with Nagios (Icinga) and Munin servers installed.
 Preparing storage
 -----------------
 
-You should start by deciding, where to place the whole ownCloud installation.
+You should start by deciding where to place the whole ownCloud installation.
 
 We have decided to place everything ownCloud related on a shared filesystem mounted on all nodes.
-This allows the Pacemaker to move services between the nodes freely if one of the
-nodes fail, and thus to achieve High Availability.
+This allows achieving High Availability, Pacemaker is then able to move services between the nodes freely if one of the
+nodes fails.
 GPFS shared filesystem creation and mounting is described on the `IBM wiki`_.
 We created a filesystem named *owncloud* using the following stanza file::
 
@@ -53,9 +53,9 @@ You will need to install some Puppet version < 3.0, because the modules we use
 aren't tested with *Puppet 3.x* versions yet.
 
 There are two modes available when deploying the Puppet -- **standalone** client or **master/agent**.
-Our Puppet configuration is tested with the master/agent setup, but it should work fine even when using just a standalone clients. You can read more about these two modes and how to deploy the Puppet in the `Puppet installation guide`_.
+Our Puppet configuration is tested with the master/agent setup, but it should work fine even when using just a standalone clients. You can read more about these two modes and how to deploy Puppet in the `Puppet installation guide`_.
 
-With puppet installed and properly configured, download the following puppet modules:
+With Puppet installed and properly configured, download the following puppet modules:
 
 Apache module::
 
@@ -71,7 +71,7 @@ Both modules are then linked together and initialized by an ownCloud profile ins
 
 .. NOTE::
   We use Puppet's Hiera_ for storing the variables, but you can
-  avoid using Hiera by substituting all ``hiera()`` calls with a variable values.
+  avoid using Hiera by substituting all ``hiera()`` calls with variable values.
 
 The relevant part of our 'nodes.pp' manifest follows::
 
@@ -140,7 +140,7 @@ When using Puppet in a standalone mode, issue the following command on each node
   # puppet apply /etc/puppet/manifests/nodes.pp
 
 If you are running in the master/agent mode, deployment will be done automatically
-by the Puppet agents. This way you should now have all the ownCloud specific services
+by Puppet agents. This way you should now have all the ownCloud specific services
 configured on all nodes.
 
 Setting up Owncloud
