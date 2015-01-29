@@ -7,16 +7,16 @@ ownCloud service at CESNET.
 .. image:: images/architecture/CesnetOcArchitecture1.0.png
 
 Our ownCloud architecture is built on top of HA (High Availability) cluster
-managed by Pacemaker_. Cluster consists of 5 equivalent nodes.
+managed by Pacemaker_. The cluster consists of 5 equivalent nodes.
 Pacemaker ensures that ownCloud and other relevant services are running
 properly even if one or more front-end dies. All nodes are physical machines,
-currently there is no virtualization at all. Key feature of our architecture
-is that all nodes are equal as each one can take any role (be it app server or DB server).
+currently there is no virtualization. Key feature of our architecture
+is that all nodes are equal as each of them can take any role (be it an app server or a DB server).
 
 Our system consists of the following components and services:
 
-* Application Server
-* Database Server
+* Application server
+* Database server
 * PgPool proxy
 * Pacemaker HA services
 * Icinga & Munin monitoring servers
@@ -27,7 +27,7 @@ Our system consists of the following components and services:
 Specs
 ------
 
-Hardware specifications for each front-end are as follows:
+Hardware specifications of each front-end are as follows:
 
   * CPU: 2 x Intel(R) Xeon(R) CPU E5-2620 0 @ 2.00GHz (24 CPUs)
   * RAM: 96 GB (~ 40 GB ownCloud-dedicated)
@@ -45,12 +45,13 @@ Application Server
 OwnCloud application is handled by Apache_ 2.2 and PHP_ 5.4
 (which has been installed from non-standard repository -- see this guide_).
 
-Newer PHP version was used instead of default PHP 5.3 (on RHEL 6) version to allow
+Newer PHP version was used instead of PHP 5.3 version (which is default on RHEL 6) to allow
 uploads of files larger than 2 GB. There were problems with this in 5.3.X series.
 We are able to do up to 16 GB uploads on PHP5.4 with no problems at all.
 
 Apache is running as a standalone server without any HTTP(S) proxies in the way. It is
-listening on port 80 and 443. HTTPS is being forced by redirection from 80 to 443.
+listening on ports 80 and 443. HTTPS is being forced from 80 to 443 by
+redirection.
 
 Complete Apache + PHP configuration and website root is located on a shared GPFS volume,
 which is mounted on all cluster nodes.
@@ -66,11 +67,13 @@ However, its configuration has been tweaked to match nodes specs and current loa
         MaxRequestsPerChild 8000
         </IfModule>
 
-Since we have quite a lot of RAM available, we increased the maximum number of workers
+Since we have quite a lot of RAM available on the servers, we increased the maximum number of workers
 to 1600, so it uses up to 40 GB of RAM with some reserve (by our measurements, one Apache
-worker proccess takes 22 MB in average).
-In order to handle a peak load afer a server restart, when user's sync clients starts
-reconnecting, the **StartServers** directive is set quite high too.
+worker process takes 22 MB in average).
+The **StartServers** directive is set to a quite high value, too, in order
+to handle peak loads after server restarts. In such a situation,
+user's clients start reconnecting massively, overloading the server significantly for
+a short period of time.
 
 Apache is set up with `Zend OPcache`_ module for better PHP performance and `mod_xsendfile`_, which is being used for faster file downloads (also provides users with pause/resume download capabilities).
 
@@ -83,20 +86,19 @@ Database Server
 ---------------
 
 PostgreSQL_ 8.4 is being used as a database server of choice. This is the highest version
-available in standard RHEL 6 repositories. Database server runs as a single instance, always on a
+available in standard RHEL 6 repositories. The database server runs in a single instance, always on a
 different node than the Apache instance and without any replication yet. We are planning
 an upgrade to 9.4 and a hot-standby streaming replication setup with load balancing. We expect
 this to help us in the future with a read heavy nature of ownCloud queries, but as of now the current setup copes with the load just fine.
 
 OwnCloud PHP application doesn't access the PostgreSQL instance directly. It sends its queries
-through `PgPool II`_, which acts as a connection cache (runs in the *Connection Pooling* mode).
-This gives us some performance boost as it reduces database instance load and reuses existing connections (thus saving a cost of creating new ones). PgPool is run together with the Apache instance on the same node.
+through `PgPool II`_, which acts as a connection cache (running in *Connection Pooling* mode).
+This gives us some performance boost as it reduces database instance load by means of reusing existing connections (thus saving cost of creating new ones). PgPool is run together with the Apache instance on the same node.
 
 PostgreSQL engine parameters are mostly set according to the pgtune_ utility recommendations.
-It has allocated 40 GB of RAM, same as the Apache instance, and a maximum numer of connections is set to **51** (mostly based on this recommendations_).
+It has been allocated 40 GB of RAM, the same as the Apache instance, and a maximum number of connections is set to **51** (mostly based on recommendations_ in PostgreSQL documentation).
 
-Database server has its data and configuration stored on a shared GPFS volume just like the
-Apache server does.
+The database server keeps its data and configuration on a shared GPFS volume just like the Apache server.
 
 Open Ports:
 
@@ -113,23 +115,32 @@ User Authentication
 
 Authentication of users is based on SAML. It relies on the SimpleSAMLphp_ backend application for 
 authentication and providing user's metadata. SimpleSAMLphp backend is configured with eduID_ and 
-eduGAIN_ IdP (Identity Providers) metadata and acts like SP (Service Provider) in the federations. 
-When users tries to log in, they are presented with a WAYF_ page, where they can pick their home 
+eduGAIN_ IdP (Identity Providers) metadata and acts like an SP (Service Provider) in the federations. 
+When users try to log in, they are presented with a WAYF_ page, where they can pick their home 
 organizations. They are then redirected to their organization's IdP login page where they log in.
-After a succesfull log in, we get all information needed about a user (uid, e-mail) from
-organization's IdP.
+After a successful log in, we get all necessary information about a user (EPPN, e-mail) from user's home organization IdP.
 
 When we were looking for a solution of user authentication, there were two available
 user backends for ownCloud, which allowed federated user accounts to log in -- `user_saml`_ and `user_shibboleth`_. Both of them were quite outdated and not working well in ownCloud 6, however.
 We have picked the *user_saml* app and fixed an issues_ it had with OC 6.
 
-Data Storage and backup
+FIXME: tohle by chtelo aspon dve vety o tom, co tam bylo za problemy k
+opravovani
+
+Data Storage and Backup
 -----------------------
 
 All the data is stored in a dedicated GPFS filesystem mounted on all nodes, so all
-nodes in the cluster can acces the same data. For this filesystem, we reserved 40TB of disk
-space. It's built on top of 4 RAID6 arrays from IBM DCS3700 disk array, which is connected
-through Fibre Channel to all frontend nodes. We use this filesystem for storing apache logs, PostgreSQL database datafiles and ownCloud data.
+nodes in the cluster can access the same data. For this filesystem, we reserved 40TB of disk
+space. The filesystem is built on top of 4 RAID6 groups from IBM DCS3700 disk array, which is connected
+through Fibre Channel infrastructure to all frontend nodes. We use this filesystem for storing Apache logs, PostgreSQL database datafiles and ownCloud data.
+
+FIXME: z toho vyse jsem pochopil, ze na tomhle GPFS svazku mame i kompletni
+instalaci toho weboveho ksichtu. Jestli je to tak, posledni vetu
+predchoziho odstavce bych doporucoval nahradit:
+We use this filesystem to store PostgreSQL database datafiles, ownCloud
+user data, web interface files for the webserver, as well as logging of all
+installation components.
 
 Data backups are realized by a GPFS utility mmbackup. This utility scans the whole filesystem
 (using GPFS inode scan interface) and passes a changed, new or deleted files to TSM (Tivoli Storage 
@@ -164,7 +175,7 @@ and create graphs. Currently we are graphing the following ownCloud statistics:
   * Filesystem space used
 
 We are also collecting all relevant logs to a central server, where it could be
-further analyzed and queried by LogStash and ElasticSearch.
+further analyzed and queried with LogStash and ElasticSearch.
 
 .. links
 .. _Pacemaker: http://clusterlabs.org/quickstart-redhat.html
