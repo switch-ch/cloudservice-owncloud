@@ -49,77 +49,58 @@ Puppet
 
 Puppet client has to be installed on all nodes participating in the ownCloud cluster.
 All packages needed could be obtained from the Puppetlabs_ repository.
-We recommend to install *puppet-2.7.x* version package, because the modules we use
-aren't tested with *Puppet 3.x* versions. 
+You will need to install some Puppet version < 3.0, because the modules we use
+aren't tested with *Puppet 3.x* versions yet.
 
-There are two modes when running the Puppet -- **standalone** client and **master/agent**.
-Our Puppet configuration is tested with master/agent setup, but it should work when using standalone clients
-too. You can read more about these two modes and how to configure them on the `Puppet installation guide`_.
-
-If you dont't want to use Hiera_ as an external data source, feel free to replace all occurences of the ``hiera()``
-calls in our puppet manifests with variable values.
+There are two modes available when deploying the Puppet -- **standalone** client or **master/agent**.
+Our Puppet configuration is tested with the master/agent setup, but it should work fine even when using just a standalone clients. You can read more about these two modes and how to deploy the Puppet in the `Puppet installation guide`_.
 
 With puppet installed and properly configured, download the following puppet modules:
 
-Apache specific configuration::
+Apache module::
 
   https://github.com/CESNET/puppet-apache #(to be uploaded)
 
-Postgres specific configuration::
+PostgreSQL module (including PgPool II)::
 
   https://github.com/CESNET/puppet-postgres #(to be uploaded)
 
-Put these two modules into the ``modulepath`` (``/etc/puppet/modules/`` is the default) of Puppet.
-If you decided to use Hiera, you will need to create following files::
+Put these two modules into the 'modulepath' (``/etc/puppet/modules/`` by default) of Puppet.
+Both modules are then linked together and initialized by an ownCloud profile inside the
+'nodes.pp' manifest. We then assign the profile to the ownCloud cluster nodes. 
 
-  #/etc/puppet/hiera.yaml
-  ---
-  :backends:
-    - json
+.. NOTE::
+  We use Puppet's Hiera_ for storing the variables, but you can
+  avoid using Hiera by substituting all ``hiera()`` calls with a variable values.
 
-  :json:
-    :datadir: /etc/puppet/hiera
-    :hierarchy:
-      - global
-
-and::
-
-  #/etc/puppet/hiera/global.json
-  {
-    "owncloud::log_dir" : "/gpfs/owncloud/logs",
-    "owncloud::reload_cmd" : "/sbin/service/httpd reload"
-  }
-
-
-After that, you can prepare the PostgresSQL and Apache installation by putting the following content
-into the ``/etc/puppet/manifests/nodes.pp``. You can replace ``hiera()`` calls with (default or custom) values,
-if you are not using hiera with your Puppet installation. ::
+The relevant part of our 'nodes.pp' manifest follows::
 
   #/etc/puppet/manifests/nodes.pp
   class profile::owncloud (
     $base_dir  = '',
-    $log_dir   = hiera('owncloud::log_dir', '/var/log'),
-    $reloadcmd = hiera('owncloud::reload_cmd')
+    $log_dir   = hiera('owncloud::log_dir')
   ) {
 
-    include postgres
-    include postgres::backup
-    class { '::postgres::pgpool':
-      config_directory => "${base_dir}/etc/pgpool",
-      backend_hostname => '<your.db.server.ip>',
-                          # aka "postgres-ip" floating ip alias
+    # Configure PostgreSQL services
+    # -----------------------------
+    include ::postgres::backup
+    
+    class { '::postgres::server':
+      conf_dir   => hiera('postgres::conf_dir', "${base_dir}/pgdata/"),
+      listen_ip  => hiera('postgres::listen_ip')
     }
 
-    case $::operatingsystem {
-      'Debian': {
-        $modpkgs = ['libapache2-mod-xsendfile']
-      }
-      'RedHat': {
-        $modpkgs = ['mod_ssl','mod_xsendfile']
-        $config  = 'apache2/etc/httpd/httpd_oc.conf.erb'
-      }
-      default: { fail("Owncloud is not supported on ${::operatingsystem}") }
+    class { '::postgres::pgpool':
+      conf_dir         => hiera('postgres::pgpool::conf_dir',
+                                "${base_dir}/etc/pgpool"),
+      backend_hostname => hiera('postgres::listen_ip'),
     }
+
+    # Configure Apache services
+    # -------------------------
+    $modpkgs = ['mod_ssl','mod_xsendfile']
+    $config  = 'apache2/etc/httpd/httpd_oc.conf.erb'
+
     class { '::apache2::server':
       base_dir        => $base_dir,
       httpd_source    => $config,
@@ -130,73 +111,58 @@ if you are not using hiera with your Puppet installation. ::
       reload_cmd      => $reloadcmd,
       oldlogs_dir     => "${log_dir}/old-logs/"
     }
-    class { '::apache2::simplesamlphp':
-      authsources_source => 'apache2/etc/simplesamlphp/authsources-owncloud.php',
-      authsources_path   => "${base_dir}/www/simplesamlphp/config/authsources.php",
-      config_source      => 'apache2/etc/simplesamlphp/config-owncloud.php',
-      config_path        => "${base_dir}/www/simplesamlphp/config/config.php",
+
+    class {'::apache2::php':
+      extension_packages  => [
+        'php54', 'php54-php',
+        'php54-php-cli', 'php54-php-common', 'php54-php-devel',
+        'php54-php-gd', 'php54-php-mbstring', 'php54-php-pdo',
+        'php54-php-pear', 'php54-php-pgsql',
+        'php54-php-process', 'php54-php-xml', 'php54-runtime',
+      ],
+      php_module          => 'modules/libphp54-php5.so',
+      post_max_size       => '16G',
+      upload_tmp_dir      => "${base_dir}/tmp",
+      upload_max_filesize => '16G',
     }
-    class { '::apache2::owncloud':
-      webdir => hiera('owncloud::webdir', '/var/www/owncloud')
-    }
+
+    include ::apache2::simplesamlphp
+    
+    class { '::apache2::owncloud': webdir => hiera('owncloud::webdir') }
   }
 
   node /your-node.hostnames.com/ {
-    class { 'profile::owncloud': base_dir => '/gpfs/owncloud' }
+    class { 'profile::owncloud': base_dir => '/yours/gpfs/mountpoint' }
   }
-
-.. NOTE::
-      After the configuration of Pacemaker, you may want to change
-      the ``$reloadcmd`` variable. If you want Puppet
-      to instruct Pacemaker to reload the web service when configuration
-      changes, you may set it to:
-      ``/usr/sbin/crm resource restart owncloud-web``
-
-      If you want to reload the service manually, just put
-      ``/bin/true`` there and set ``manage_service => false`` for
-      the ``::apache2::server`` class.
 
 When using Puppet in a standalone mode, issue the following command on each node::
 
   # puppet apply /etc/puppet/manifests/nodes.pp
 
-If you are running in master/agent mode, you can get yourself a cup of coffee while
-the Puppet agents are fetching configuration from the Puppet master and doing its job.
-You can however speed things up by running the following command on each node::
-
-  # puppet agent --test
-
-This will install and configure the Apache and PosgreSQL servers on all nodes
-with matching hostnames for you. If you do not specify ``base_dir``, it will
-write its configuration into default paths (mostly ``/etc/...``) for each package.
-Because we use shared gpfs volume ``/gpfs/owncloud``, we tell Puppet to install
-configuration into that volume (``/gpfs/owncloud/etc/...``).
+If you are running in the master/agent mode, deployment will be done automatically
+by the Puppet agents. This way you should now have all the ownCloud specific services
+configured on all nodes.
 
 Setting up Owncloud
 -------------------
 
-You will need to download and install ownCloud 6
-from a source archive. Full installation procedure is described in
-the `ownCloud installation guide`_, you can just skip the Apache & PostgreSQL
-parts.
+In the next step, you will need to download and install ownCloud 6 from the source archive.
+Just follow the `Download ownCloud`_ and `Set permissions`_ sections of the
+official installation guide.
 
-For the user authentication to work properly, you may want to check out our
-`ownCloud apps`_ repository, especially the *user_saml* and *mail_notifications* app.
-You can install these apps by running: ::
-
-  cd /tmp/
-  git clone https://github.com/CESNET/owncloud-apps
-  cp -r owncloud-apps/user_saml /gpfs/owncloud/www/owncloud/apps/
-  cp -r owncloud-apps/mail_notifications /gpfs/owncloud/www/owncloud/apps/
-
-Now you should have ownCloud sources prepared, but you still need
-to install and configure the Apache server together with PostgreSQL.
-For this task we use Puppet.
+For the user SAML authentication to work properly, you need to fetch the 'user_saml' app
+from the `owncloud/apps`_ GitHub repository. It already contains our fixes of
+the 'user_saml' app. If you are interested in our modifications as described in
+the :ref:`cesnet-modifications` chapter, you are free to try the
+`cesnet/owncloud-apps`_ repository instead.
 
 SimplesamlPHP
 ^^^^^^^^^^^^^
 
-You will also need to download the SimplesamlPHP authentication backend
+Now you'll need to finish the configuration of an authentication backend
+used by the 'user_saml' app. Most of the things should be already
+put in place by Puppet.
+
 
 
 
@@ -226,5 +192,7 @@ User_saml
 .. _`Puppet installation guide`: http://docs.puppetlabs.com/guides/install_puppet/pre_install.html#general-puppet-info
 .. _`Puppet master`: http://docs.puppetlabs.com/guides/install_puppet/install_el.html#step-3-install-puppet-on-the-puppet-master-server
 .. _`IBM wiki`: https://www.ibm.com/developerworks/community/wikis/home?lang=en#!/wiki/General+Parallel+File+System+%28GPFS%29/page/Install+and+configure+a+GPFS+cluster+on+AIX
-.. _`ownCloud installation guide`: http://doc.owncloud.org/server/6.0/admin_manual/installation/installation_source.html
-.. _`ownCloud apps`: https://github.com/CESNET/owncloud-apps
+.. _`Download ownCloud`: http://doc.owncloud.org/server/6.0/admin_manual/installation/installation_source.html#download-extract-and-copy-owncloud-to-your-web-server
+.. _`Set permissions`: http://doc.owncloud.org/server/6.0/admin_manual/installation/installation_source.html#set-the-directory-permissions
+.. _`owncloud/apps`: https://github.com/owncloud/apps
+.. _`cesnet/owncloud-apps`: https://github.com/CESNET/owncloud-apps

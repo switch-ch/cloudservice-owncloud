@@ -1,3 +1,5 @@
+.. _cesnet-modifications:
+
 CESNET Modifications to ownCloud
 ==================================
 

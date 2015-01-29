@@ -8,7 +8,9 @@ Access to the service is allowed for institutions involved in a Czech national a
 the user doesn't have access to the federation, provided the user is affiliated to an institution compliant with the `CESNET Access Policy_`. For these situations, a validated Hostel_ account can
 be used to access the federated web interface (validated accounts require the users to prove their affiliation to an academic and/or research organizations by means of supplying a signed statement).
 
-As of January 2015, there are 2600 users using the service with approx. 17 TB of stored data (14 millions of files). Accounts for newcomers are created automatically upon first login and
+As of January 2015, there are 2600 users using the service with approx. 17 TB of stored data (14 millions of files). The most recent statistics of our ownCloud service can be viewed on our website_.
+
+Accounts for newcomers are created automatically upon first login and
 each new account is given a 100 GB quota. We are providing the service with a
 best-effort policy (i.e., we do our best to keep the service up and running, there is no formal SLA) and with no pay-per-use model. The users are required to comply
 with data storage general `Terms of service`_.
@@ -22,5 +24,6 @@ Our ownCloud service can be used as:
 .. links:
 .. _eduID: https://www.eduid.cz/en/index
 .. _Hostel: https://hostel.eduid.cz/en/index.html
+.. _website: https://du.cesnet.cz/en/statistiky/owncloud
 .. _`Terms of Service`: https://du.cesnet.cz/en/provozni_pravidla/start
 .. _`CESNET Access Policy`: http://www.cesnet.cz/cesnet/documents/access-policy-ap-for-the-cesnet-large-infrastructure/?lang=en
