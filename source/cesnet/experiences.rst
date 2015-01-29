@@ -23,7 +23,7 @@ HA Configuration
 
 The only major things we kept away from the Puppet's reach were filesystem preparation and a Pacemaker HA configuration. Preparing a filesystem was pretty straightforward, but setting
 up a HA cluster has proven to be a major challenge for us. We had to prepare RA's (Resource
-Agents) for each component desired to run in HA mode. These agents monitor and manage (start, stop, restart, …) components they are assigned to. As the dependency tree (order of starting/stopping components, collocation, STONITH & failover) among those RA's grown up, things were getting rather complicated. The main source of problems was surely the RA's monitor function. Each running
+Agents) for some component desired to run in HA mode. These agents monitor and manage (start, stop, restart, …) components they are assigned to. As the dependency tree (order of starting/stopping components, collocation, STONITH & failover) among those RA's grown up, things were getting rather complicated. The main source of problems was surely the RA's monitor function. Each running
 component must respond to a monitor called from a RA within a certain timeout. When a monitor
 timeouts, RA declares component as failed and Pacemaker automatically stops all components
 that depends on the failed one. Although this is correct behavior, we were often experiencing failed monitors (and thus stopping of dependent services) when the incriminated component was working just fine. It just responded to monitor too late under some load patterns. We didn't want to set it overly high too (in order to respond to real failure quickly). It took us
@@ -69,7 +69,7 @@ opraveno" pred tu posledni vetu (jestli se to teda stalo)
 Cron Job Traffic Jam
 ~~~~~~~~~~~~~~~~~~~~
 
-For a long time, we have been fighting with a steadily worsening ownCloud website responsiveness.
+For a long time, we have been fighting with a steadily increasing ownCloud website response times.
 It got to the point where it was a way too sluggish at a given number of users and usage.
 When looking at the page loading times, it took most of the time to load generated JS
 files like 'core.js'. But after running XDEBUG we started to suspect the database
@@ -82,7 +82,7 @@ FIXME: nedame sem jeste graf narustu uzivatelu nekam? Protoze by se mozna
 dalo rict, ze by to clovek pricital tomu, ze pocet uzivatelu rostl, ale ze
 priciny byly typicky jinde a daly se vyprofilovat.
 
-When we started looking at a queries that were being executed on the database, we suddenly
+When we started looking at a queries that were being executed on the database, we 
 saw that almost **90%** of them were just SELECTs on the 'oc_jobs' table::
 
 	SELECT `id`, `class`, `last_run`, `argument` FROM `oc_jobs` WHERE `id` > ? ORDER BY `id` ASC
