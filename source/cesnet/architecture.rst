@@ -108,8 +108,20 @@ Open Ports:
 High Availability
 -----------------
 
-Pacemaker_ 1.1 on top of RedHat's CMAN 3.0. is being used as High Availability resource manager for all services and applications. Main advantages for this setup are defined order in which individual resources are being started, default locations where services are being run, automatic distribution of services based on their mutual linkage, periodical checks if all services are running and of cause HA. We are using basic Resource Agents (RAs) available from system repository for controlling Apachei, IP aliases and PostgreSQL services. Due to the lack of repository RA for PgPool we adopt our own script.
-From the OC point of view we are using six resources all of them running in active-passive mode. First of all IP alias for database is started on one node after which PostgreSQL DB is started on the same node. Start of the PgPool RA is the next step, which takes place on different node then the DB. Both IPv4 and IPv6 aliases for OC service are started on the same node as PgPool is running and finally Apache RA is started. Pacemaker guaranties shutdown of all services in exactly backward order if necessary.
+Pacemaker_ 1.1 on top of RedHat's CMAN 3.0. is being used as High Availability
+resource manager for all services and applications. Main advantages for this setup
+are defined order in which individual resources are being started, default locations
+where services are being run, automatic distribution of services based on their mutual
+linkage, periodical checks if all services are running and of cause HA. We are using
+basic Resource Agents (RAs) available from system repository for controlling Apache,
+IP aliases and PostgreSQL services. Due to the lack of repository RA for PgPool II we
+developed our own RA script.
+From the OC point of view we are using six resources and all of them runs in the active-passive
+mode. First of all IP alias for database is started on one node after which the PostgreSQL DB is
+started on the same node. Start of the PgPool II RA is the next step, which takes place on a
+different node than the DB. Both IPv4 and IPv6 aliases for ownCloud service are started on the
+same node as soon as the PgPool II is running and finally the Apache RA is started. Pacemaker
+guarantees shutdown of all services in exactly backward order if necessary.
 
 User Authentication
 -------------------
@@ -122,10 +134,9 @@ After a successful log in, we get all necessary information about a user (EPPN, 
 
 When we were looking for a solution of user authentication, there were two available
 user backends for ownCloud, which allowed federated user accounts to log in -- `user_saml`_ and `user_shibboleth`_. Both of them were quite outdated and not working well in ownCloud 6, however.
-We have picked the *user_saml* app and fixed an issues_ it had with OC 6.
-
-FIXME: tohle by chtelo aspon dve vety o tom, co tam bylo za problemy k
-opravovani
+We have picked the *user_saml* app and fixed an issues it had with OC 6 in this `pull request`_.
+Without those fixes, user creation and logout was broken. That way only already existing ownCloud
+users could log in using SAML authentication and the 'Logout' option from the menu did nothing.
 
 Data Storage and Backup
 -----------------------
@@ -190,4 +201,4 @@ further analyzed and queried with LogStash and ElasticSearch.
 .. _WAYF: https://www.eduid.cz/en/tech/wayf
 .. _Icinga: https://www.icinga.org/
 .. _Munin: http://munin-monitoring.org/
-.. _issues: https://github.com/owncloud/apps/pull/1681
+.. _`pull request`: https://github.com/owncloud/apps/pull/1681

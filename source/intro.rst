@@ -45,6 +45,8 @@ The technical parts are based on the implementation of ownCloud at SWITCH
 As of October 2014 a section describing the implementation of ownCloud at GARR,
 with the GARRbox_ service, has been added.
 
+In January 2015, CESNET has added a description of its ownCloud service. 
+
 
 Authors
 -------
@@ -52,7 +54,7 @@ Authors
 * `Jens-Christian Fischer <jens-christian.fischer@switch.ch>`_
 * `Patrik Schnellmann <patrik.schnellmann@switch.ch>`_
 * `the GARRbox team <garrbox-service@garr.it>`_
-* `Miroslav Bauer <bauer@cesnet.cz>`_
+* `Miroslav Bauer <bauer@cesnet.cz>`_, Jan Horníček and David Antoš @ `CESNET <du-support@cesnet.cz>`_
 * Your name here
 
 .. links
