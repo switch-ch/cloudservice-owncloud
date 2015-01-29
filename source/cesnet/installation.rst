@@ -4,59 +4,45 @@ CESNET Installation
 Prerequisites
 -------------
 
-In order to replicate our ownCloud setup, you will need the following software
+In order to replicate our ownCloud deployment, you will need the following software
 prerequisites to be installed on your designated nodes:
 
   * Puppet 2.7.x
   * Pacemaker
   * Munin-node
+  * GPFS
   * Nrpe + nagios-plugins-nrpe
   * RHEL6 or Debian
 
-For monitoring and reporting purposes, you should have some dedicated servers
-at your disposal with Nagios (Icinga) and Munin server installed.
+For monitoring and reporting purposes, you should also have some dedicated servers
+at your disposal with Nagios (Icinga) and Munin servers installed.
 
-Software
---------
-
-Owncloud
-^^^^^^^^
+Preparing storage
+-----------------
 
 You should start by deciding, where to place the whole ownCloud installation.
 
-We like to place everything related to ownCloud on a shared filesystem mounted on all nodes.
-This allows Pacemaker to move services between the nodes freely if one of them fails,
-and thus to achieve High Availability.
-GPFS filesystem creation and mounting on all nodes is described on the `IBM wiki`_.
-We created a filesystem named *owncloud* and mounted it into *gpfs* directory. ::
+We have decided to place everything ownCloud related on a shared filesystem mounted on all nodes.
+This allows the Pacemaker to move services between the nodes freely if one of the
+nodes fail, and thus to achieve High Availability.
+GPFS shared filesystem creation and mounting is described on the `IBM wiki`_.
+We created a filesystem named *owncloud* using the following stanza file::
 
-  /dev/owncloud on /gpfs/owncloud type gpfs (rw,noexec,mtime,quota=userquota;groupquota;filesetquota,dev=owncloud)
+  # owncloudfs.stanza
+  # This assumes you have already created NSDs
+  # (mmaddisk) from your disk array LUNs
+  %nsd:
+          nsd=name_of_nsd
+          usage=dataAndMetadata
+  ...
 
+And then executing the following commands (this will assign NSDs to the newly created filesystem)::
+  
+   mmcrfs owncloud -F owncloudfs.stanza -A no -B 2M -D nfs4 -n 5
+   mmmount owncloud -a
 
-With filesystem prepared, you will need to download `ownCloud 6.0.3`_ source archive.
-Extract the archive into your shared filesystem: ::
-
-  mkdir /gpfs/owncloud/www/
-  cd /gpfs/owncloud/www/
-  tar -xjf owncloud-6.0.3.tar.bz2
-
-For user authentication to work properly, you may want to check out our
-`ownCloud apps`_ repository, especially the *user_saml* and *mail_notifications* app.
-You can install these apps by running: ::
-
-  cd /tmp/
-  git clone https://github.com/CESNET/owncloud-apps
-  cp -r owncloud-apps/user_saml /gpfs/owncloud/www/owncloud/apps/
-  cp -r owncloud-apps/mail_notifications /gpfs/owncloud/www/owncloud/apps/
-
-Now you should have ownCloud sources prepared, but you still need
-to install and configure the Apache server together with PostgreSQL.
-For this task we use Puppet.
-
-SimplesamlPHP
-^^^^^^^^^^^^^
-
-You will also need to download the SimplesamlPHP authentication backend
+You should now have the filesystem prepared and mounted on all nodes in
+the GPFS cluster. 
 
 Puppet
 ^^^^^^
@@ -186,6 +172,34 @@ write its configuration into default paths (mostly ``/etc/...``) for each packag
 Because we use shared gpfs volume ``/gpfs/owncloud``, we tell Puppet to install
 configuration into that volume (``/gpfs/owncloud/etc/...``).
 
+Setting up Owncloud
+-------------------
+
+You will need to download and install ownCloud 6
+from a source archive. Full installation procedure is described in
+the `ownCloud installation guide`_, you can just skip the Apache & PostgreSQL
+parts.
+
+For the user authentication to work properly, you may want to check out our
+`ownCloud apps`_ repository, especially the *user_saml* and *mail_notifications* app.
+You can install these apps by running: ::
+
+  cd /tmp/
+  git clone https://github.com/CESNET/owncloud-apps
+  cp -r owncloud-apps/user_saml /gpfs/owncloud/www/owncloud/apps/
+  cp -r owncloud-apps/mail_notifications /gpfs/owncloud/www/owncloud/apps/
+
+Now you should have ownCloud sources prepared, but you still need
+to install and configure the Apache server together with PostgreSQL.
+For this task we use Puppet.
+
+SimplesamlPHP
+^^^^^^^^^^^^^
+
+You will also need to download the SimplesamlPHP authentication backend
+
+
+
 Pacemaker
 ^^^^^^^^^
 
@@ -212,5 +226,5 @@ User_saml
 .. _`Puppet installation guide`: http://docs.puppetlabs.com/guides/install_puppet/pre_install.html#general-puppet-info
 .. _`Puppet master`: http://docs.puppetlabs.com/guides/install_puppet/install_el.html#step-3-install-puppet-on-the-puppet-master-server
 .. _`IBM wiki`: https://www.ibm.com/developerworks/community/wikis/home?lang=en#!/wiki/General+Parallel+File+System+%28GPFS%29/page/Install+and+configure+a+GPFS+cluster+on+AIX
-.. _`ownCloud 6.0.3`: https://download.owncloud.org/community/owncloud-6.0.3.tar.bz2
+.. _`ownCloud installation guide`: http://doc.owncloud.org/server/6.0/admin_manual/installation/installation_source.html
 .. _`ownCloud apps`: https://github.com/CESNET/owncloud-apps
