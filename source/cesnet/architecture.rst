@@ -86,7 +86,7 @@ Database Server
 ---------------
 
 PostgreSQL_ 8.4 is being used as a database server of choice. This is the highest version
-available in standard RHEL 6 repositories. The database server runs in a single instance, always on a
+available in standard RHEL 6 repositories. The database server runs in a single instance, preferably on a
 different node than the Apache instance and without any replication yet. We are planning
 an upgrade to 9.4 and a hot-standby streaming replication setup with load balancing. We expect
 this to help us in the future with a read heavy nature of ownCloud queries, but as of now the current setup copes with the load just fine.
@@ -108,14 +108,14 @@ Open Ports:
 High Availability
 -----------------
 
-*Pacemaker resources setup, resource agents - @berosek*
+Pacemaker_ 1.1 on top of RedHat's CMAN 3.0. is being used as High Availability resource manager for all services and applications. Main advantages for this setup are defined order in which individual resources are being started, default locations where services are being run, automatic distribution of services based on their mutual linkage, periodical checks if all services are running and of cause HA. We are using basic Resource Agents (RAs) available from system repository for controlling Apachei, IP aliases and PostgreSQL services. Due to the lack of repository RA for PgPool we adopt our own script.
+From the OC point of view we are using six resources all of them running in active-passive mode. First of all IP alias for database is started on one node after which PostgreSQL DB is started on the same node. Start of the PgPool RA is the next step, which takes place on different node then the DB. Both IPv4 and IPv6 aliases for OC service are started on the same node as PgPool is running and finally Apache RA is started. Pacemaker guaranties shutdown of all services in exactly backward order if necessary.
 
 User Authentication
 -------------------
 
 Authentication of users is based on SAML. It relies on the SimpleSAMLphp_ backend application for 
-authentication and providing user's metadata. SimpleSAMLphp backend is configured with eduID_ and 
-eduGAIN_ IdP (Identity Providers) metadata and acts like an SP (Service Provider) in the federations. 
+authentication and providing user's metadata. SimpleSAMLphp backend is configured with eduID_ IdP (Identity Providers) metadata and acts like an SP (Service Provider) in the federations. 
 When users try to log in, they are presented with a WAYF_ page, where they can pick their home 
 organizations. They are then redirected to their organization's IdP login page where they log in.
 After a successful log in, we get all necessary information about a user (EPPN, e-mail) from user's home organization IdP.
@@ -133,14 +133,8 @@ Data Storage and Backup
 All the data is stored in a dedicated GPFS filesystem mounted on all nodes, so all
 nodes in the cluster can access the same data. For this filesystem, we reserved 40TB of disk
 space. The filesystem is built on top of 4 RAID6 groups from IBM DCS3700 disk array, which is connected
-through Fibre Channel infrastructure to all frontend nodes. We use this filesystem for storing Apache logs, PostgreSQL database datafiles and ownCloud data.
-
-FIXME: z toho vyse jsem pochopil, ze na tomhle GPFS svazku mame i kompletni
-instalaci toho weboveho ksichtu. Jestli je to tak, posledni vetu
-predchoziho odstavce bych doporucoval nahradit:
-We use this filesystem to store PostgreSQL database datafiles, ownCloud
-user data, web interface files for the webserver, as well as logging of all
-installation components.
+through Fibre Channel infrastructure to all frontend nodes. We use this filesystem to store PostgreSQL database datafiles, ownCloud
+user data, web interface files for the webserver, as well as logging of all installation components.
 
 Data backups are realized by a GPFS utility mmbackup. This utility scans the whole filesystem
 (using GPFS inode scan interface) and passes a changed, new or deleted files to TSM (Tivoli Storage 
@@ -158,7 +152,7 @@ We had to write own custom plugins to check some ownCloud specific stuff.
 Following items are being periodically checked by Icinga:
 
   * SSL certificate validity
-  * WebDAV client functioning properly
+  * WebDAV client functioning properly (data can be uploaded and downloaded)
   * Free space on OC GPFS volume
   * Apache responding on HTTPS
   * PING (machine with owncloud-ip responding)
