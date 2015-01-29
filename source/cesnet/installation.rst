@@ -169,7 +169,27 @@ put in place by Puppet.
 Pacemaker
 ^^^^^^^^^
 
-The basic installation of Pacemaker HA manager on RHEL 6 system is not goal of this text and can be find elsewhere_. We 
+The basic installation of Pacemaker HA manager on RHEL 6 system is not goal of this text and can be find elsewhere_. For this section let's assume that fully functional installation of Pacemaker is installed on at least three hosts with working STINITHd and all necessary dependencies like filesystem resources and so on. Let's also assume that all necessary RAs are have been installed as part of the Pacemaker installation and placed in /usr/lib/ocf/resource.d/. Only missing RA is one for controlling PgPool II that needs to be written or `CESNET version_` can be downloaded.
+
+All examples of Pacemaker configuration are meant to be used with the help of crmshell_ and service definition may looks like this::
+
+        primitive PSQL_OC pgsql \
+        op monitor interval=60s timeout=30s on-fail=restart \
+        op start interval=0 timeout=600s on-fail=restart requires=fencing \
+        op stop interval=0 timeout=120s on-fail=fence \
+        params pgdata="/some_path/pgsql/data/" pghost=IP_address monitor_password=password monitor_user=user pgdb=monitor \
+        meta resource-stickiness=100 migration-threshold=10 target-role=Started
+
+Special database monitor is used for the monitoring of the PostgreSQL database. It's good to keep minimally one connection to the database unhanded by PgPool II so this monitor can use it.
+All other services are configured in the same manner. Right parameters of different RAs can be tested by direct running of those scripts. For example the above database can be monitored by this command::
+
+        OCF_ROOT=/usr/lib/ocf OCF_RESKEY_pgdata="/some_path/pgsql/data/" OCF_RESKEY_pghost=IP_address OCF_RESKEY_monitor_password="password" OCF_RESKEY_monitor_user=user OCF_RESKEY_pgdb=monitor /usr/lib/ocf/resource.d/heartbeat/pgsql monitor
+
+Next all location, colocation and order linkages must by specified. 
+
+After successful configuration of all services fine tuning of each of timeouts must take place. There is no general values of timeouts, but good start is the use of recommended ones from RA's scripts. 
+
+
 
 TODO: we are changing our pacemaker configuration right now. This section
 will be added when things get sorted out.
@@ -199,3 +219,4 @@ User_saml
 .. _`owncloud/apps`: https://github.com/owncloud/apps
 .. _`cesnet/owncloud-apps`: https://github.com/CESNET/owncloud-apps
 .. _elsewhere: http://clusterlabs.org/quickstart-redhat.html
+.. _crmshell: http://crmsh.github.io/
