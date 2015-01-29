@@ -169,6 +169,8 @@ put in place by Puppet.
 Pacemaker
 ^^^^^^^^^
 
+The basic installation of Pacemaker HA manager on RHEL 6 system is not goal of this text and can be find elsewhere_. We 
+
 TODO: we are changing our pacemaker configuration right now. This section
 will be added when things get sorted out.
 
@@ -196,3 +198,4 @@ User_saml
 .. _`Set permissions`: http://doc.owncloud.org/server/6.0/admin_manual/installation/installation_source.html#set-the-directory-permissions
 .. _`owncloud/apps`: https://github.com/owncloud/apps
 .. _`cesnet/owncloud-apps`: https://github.com/CESNET/owncloud-apps
+.. _elsewhere: http://clusterlabs.org/quickstart-redhat.html
