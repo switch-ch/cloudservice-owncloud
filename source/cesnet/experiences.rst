@@ -37,13 +37,34 @@ User files coming from the future
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Among the first things we observed (and we are still observing) in our logs
-were errors like this:
+were errors like this::
 
-	{...,An exception occurred while executing 'UPDATE \"oc_filecache\" SET \"mtime\" = ?, \"etag\" = ?, \"storage_mtime\"=? WHERE \"fileid\" = ?':\n\nSQLSTATE[22003]: Numeric value out of range: 7 ERROR:  value \"5998838837323182874\" is out of range for type integer"...}
+	{...,An exception occurred while executing
+	UPDATE "oc_filecache" SET "mtime" = ?, "etag" = ?, \"storage_mtime\"=?
+	WHERE "fileid" = ?: SQLSTATE[22003]: Numeric value out of range: 7
+	ERROR:  value \"5998838837323182874\" is out of range for type integer"...}
 
-
+Root cause of these errors was that files with bad mtimes were
+synchronized to us from the user clients. Most of those files were
+coming from a cameras without a properly set date, or any other
+misconfigured devices. This caused sync problems and even unability
+to log in for the one of the users. But right now we don't have a better
+solution other than to recommend users to watch out for these files.
 
 Cronjob traffic jam
 ~~~~~~~~~~~~~~~~~~~
 
-Cron job slowdown
+For a long time, we have been fighting with a steadily worsening ownCloud website responsiveness.
+It got to the point where it was a way too sluggish at a given number of users and usage.
+When looking at the page loading times, it took most of the time to load generated JS
+files like 'core.js'. But after running XDEBUG we started to suspect the database
+to be the major bottleneck. Database node had all CPU cores utilized to the max
+almost all the time. The response times of database backend were way too high.
+PgPool II deployment and PostgreSQL configuration tuning helped for a while, but after
+few months it got worse again.
+
+When we looked at queries that were being executed on the database, we suddenly saw that almost 80%
+were SELECTs on the 'oc_jobs' table::
+
+	SELECT `id`, `class`, `last_run`, `argument` FROM `oc_jobs` WHERE `id` > ? ORDER BY `id` ASC
+
