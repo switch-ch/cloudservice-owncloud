@@ -23,19 +23,9 @@ HA Configuration
 
 The only major things we kept away from the Puppet's reach were filesystem preparation and a Pacemaker HA configuration. Preparing a filesystem was pretty straightforward, but setting
 up a HA cluster has proven to be a major challenge for us. We had to prepare RA's (Resource
-Agents) for some component desired to run in HA mode. These agents monitor and manage (start, stop, restart, …) components they are assigned to. As the dependency tree (order of starting/stopping components, collocation, STONITH & failover) among those RA's grown up, things were getting rather complicated. The main source of problems was surely the RA's monitor function. Each running
-component must respond to a monitor called from a RA within a certain timeout. When a monitor
-timeouts, RA declares component as failed and Pacemaker automatically stops all components
-that depends on the failed one. Although this is correct behavior, we were often experiencing failed monitors (and thus stopping of dependent services) when the incriminated component was working just fine. It just responded to monitor too late under some load patterns. We didn't want to set it overly high too (in order to respond to real failure quickly). It took us
-a lot of time (and a lot of hair pulled out :-)) to figure out the correct monitor timeouts
-for each RA. But nowadays we can say, that it's pretty stable and behaves the way we expect it to.
-
-
-FIXME: tohle je az moc pohadkovym stylem a hlavne to vubec nerika nic o
-tom, co tam bylo za realny problem. Jestli je potreba rict, ze monitory se
-musi poladit na time-outy podle aktualni konfigurace, tak by to asi stacilo
-strucneji. Takhle to trochu pusobi dojmem, ze jsme idioti (coz rozhodne
-nejsme).
+Agents) for some component desired to run in HA mode. 
+As the number of services managed by Pacemaker grown up in time, the whole configuration of proper linkage between services and hosts become more and more complex. The most time consuming and problematic part was the fine tuning of timeout parameters of basic actions of all services. In normal non stressful conditions setted up timeouts were too low in some stress conditions. This behaviour led to strange and difficult to identify restarts of services and in some cases whole nodes.
+But nowadays, after hours and hours of tuning, we can say, that it's pretty stable and behaves the way we expect it to.
 
 ownCloud Application
 --------------------
