@@ -45,7 +45,7 @@ You should now have the filesystem prepared and mounted on all nodes in
 the GPFS cluster. 
 
 Puppet
-^^^^^^
+------
 
 Puppet client has to be installed on all nodes participating in the ownCloud cluster.
 All packages needed could be obtained from the Puppetlabs_ repository.
@@ -57,8 +57,6 @@ Our Puppet configuration is tested with the master/agent setup, but it should wo
 a standalone clients. You can read more about these two modes and how to deploy Puppet in the `Puppet installation guide`_.
 
 With Puppet installed and properly configured, download the following puppet modules:
-
-.. _apache-module:
 
 Apache module::
 
