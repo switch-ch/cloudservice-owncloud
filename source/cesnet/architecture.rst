@@ -125,6 +125,8 @@ alias for database is configured. Start of the PgPool II RA is the next step, wh
 different node than the DB. Both IPv4 and IPv6 aliases for ownCloud service are started on the node as soon as the PgPool II is running, and finally the Apache RA is started. Pacemaker
 guarantees shutdown of all services in a contrary order if necessary.
 
+.. _samlfix:
+
 User Authentication
 -------------------
 

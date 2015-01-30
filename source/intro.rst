@@ -54,7 +54,7 @@ Authors
 * `Jens-Christian Fischer <jens-christian.fischer@switch.ch>`_
 * `Patrik Schnellmann <patrik.schnellmann@switch.ch>`_
 * `the GARRbox team <garrbox-service@garr.it>`_
-* `Miroslav Bauer <bauer@cesnet.cz>`_, Jan Horníček and David Antoš @ `CESNET <du-support@cesnet.cz>`_
+* `Miroslav Bauer <bauer@cesnet.cz>`_, Jan Hornicek and David Antos @ `CESNET <du-support@cesnet.cz>`_
 * Your name here
 
 .. links
