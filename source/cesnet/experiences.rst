@@ -43,18 +43,15 @@ were errors like this::
 	{...,An exception occurred while executing
 	UPDATE "oc_filecache" SET "mtime" = ?, "etag" = ?, \"storage_mtime\"=?
 	WHERE "fileid" = ?: SQLSTATE[22003]: Numeric value out of range: 7
-	ERROR:  value \"5998838837323182874\" is out of range for type integer"...}
+	ERROR:  value \"2497698996\" is out of range for type integer"...}
 
-Root cause of these errors was that files with bad mtimes were
-synchronized to us from the user clients. Most of those files were
+Root cause of these errors seemed to be that files with bad mtimes were
+synchronized to us from the user clients. Many of those files were
 coming from a cameras without a properly set date, or any other
 misconfigured devices. This caused sync problems and even unability
 to log in for the one of the users. But right now we don't have a better
 solution other than to recommend users to watch out for these files.
-
-FIXME: tohle by chtelo aspon "reportovali jsme vyvojarum, dosud neni
-opraveno" pred tu posledni vetu (jestli se to teda stalo)
-
+The issue is currently being discussed in this ticket_ as a bug.
 
 Cron Job Traffic Jam
 ~~~~~~~~~~~~~~~~~~~~
@@ -62,29 +59,33 @@ Cron Job Traffic Jam
 For a long time, we have been fighting with a steadily increasing ownCloud website response times.
 It got to the point where it was a way too sluggish at a given number of users and usage.
 When looking at the page loading times, it took most of the time to load generated JS
-files like 'core.js'. But after running XDEBUG we started to suspect the database
+files like 'core.js'. But after some XDEBUG profiling we started to suspect the database
 to be the major bottleneck. Database node had all CPU cores utilized to the max
 almost all the time. The response times of database backend were way too high.
 PgPool II deployment and PostgreSQL configuration tuning helped for a while, but after
 few months it got worse again.
 
-FIXME: nedame sem jeste graf narustu uzivatelu nekam? Protoze by se mozna
-dalo rict, ze by to clovek pricital tomu, ze pocet uzivatelu rostl, ale ze
-priciny byly typicky jinde a daly se vyprofilovat.
-
-When we started looking at a queries that were being executed on the database, we 
-saw that almost **90%** of them were just SELECTs on the 'oc_jobs' table::
+One could think that this could be attributed to a big gain of users in October 2014
+as you can see in our ownCloud statistics_. But when we started looking at a queries that
+were being executed on the database, we saw that almost **90%** of them were just SELECTs
+on the 'oc_jobs' table::
 
 	SELECT `id`, `class`, `last_run`, `argument` FROM `oc_jobs` WHERE `id` > ? ORDER BY `id` ASC
 
-The 'oc_jobs' table also counted more than 80,000 rows. This was a clear indication that the ownCloud's cron job (cron.php script which is supposed to delete old temporary files and clean
+The 'oc_jobs' table also counted more than 80,000 rows. This was a clear indication that the ownCloud's
+cron job (cron.php script which is supposed to delete old temporary files and clean
 the 'oc_jobs' and other DB tables) didn't do its job properly. Cron job was configured to be
 executed by the system cron. It was executing every 15 minutes, but it did nothing.
 
 Then we realized that this was because of an existing lockfile placed inside ownCloud's data
 folder. This must have been left there for a long time by some previous cron job run (which must 
-have ended really badly). We however didn't isolate the source of those SELECTs. But after we removed that lockfile and ran the cron job again, there were only 2 records left in the 'oc_jobs' table. Since then, ownCloud's overall performance went dramatically up and is up to our expectations.
+have ended really badly). We however didn't isolate the source of those SELECTs. But after we removed
+that lockfile and ran the cron job again, there were only 2 records left in the 'oc_jobs' table. Since then,
+ownCloud's overall performance went dramatically up and is up to our expectations. We are now serving
+more than 2600 users still on a single Apache & DB instance without any load balancing. And we are
+expecting to serve even more using this setup for the following months.
 
-FIXME: opet bych v posledni vete zduraznil, ze i pri 2500+ uzivatelich na
-jednom stroji
+.. links:
 
+.. _ticket: https://github.com/owncloud/core/issues/12773
+.. _statistics: https://du.cesnet.cz/en/statistiky/owncloud
