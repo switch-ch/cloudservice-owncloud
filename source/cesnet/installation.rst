@@ -50,7 +50,7 @@ Puppet
 Puppet client has to be installed on all nodes participating in the ownCloud cluster.
 All packages needed could be obtained from the Puppetlabs_ repository.
 You will need to install some Puppet version < 3.0, because the modules we use
-aren't tested with *Puppet 3.x* versions yet.
+haven't been tested with *Puppet 3.x* versions yet.
 
 There are two modes available when deploying the Puppet -- **standalone** client or **master/agent**.
 Our Puppet configuration is tested with the master/agent setup, but it should work fine even when using just
@@ -147,9 +147,9 @@ deployed to all nodes.
 Pacemaker
 ---------
 
-The basic installation of Pacemaker HA manager on RHEL 6 system is not goal of this text and can be find elsewhere_. For this section let's assume that fully functional installation of Pacemaker is installed on at least three hosts with working STONITHd and all necessary dependencies like filesystem resources and so on. Let's also assume that all necessary RAs are have been installed as part of the Pacemaker installation and placed in /usr/lib/ocf/resource.d/. Only missing RA is one for controlling PgPool II that needs to be written or `CESNET version_` can be downloaded.
+The basic installation of Pacemaker HA manager on RHEL 6 system is not covered in this text and can be found elsewhere_. In this section, let us assume that fully functional installation of Pacemaker is installed on at least three hosts with working STONITHd and all necessary dependencies like, e.g., filesystem resources. We also assume that all necessary RAs are have been installed as part of the Pacemaker installation and placed in /usr/lib/ocf/resource.d/. The only remaining RA is the one for controlling PgPool II. This RA needs to be written, or, more conveniently, `CESNET version_` can be downloaded.
 
-All examples of Pacemaker configuration are meant to be used with the help of crmshell_ and service definition may looks like this::
+All examples of Pacemaker configuration are meant to be used with the help of crmshell_. Service definition may be the following::
 
         primitive PSQL_OC pgsql \
         op monitor interval=60s timeout=30s on-fail=restart \
@@ -168,7 +168,7 @@ Another example is definition of PgPool II service based on our RA::
         op start interval=0 timeout=60s on-fail=restart requires=fencing \
         op stop interval=0 timeout=60s on-fail=fence
 
-All other services are configured in the same manner. Right parameters of different RAs can be tested by direct running of those scripts. For example the database can be monitored by this command::
+All remaining necessary services are configured in the same manner. Right parameters of different RAs can be tested by direct running of those scripts. For example the database can be monitored by this command::
 
         OCF_ROOT=/usr/lib/ocf OCF_RESKEY_pgdata="/some_path/pgsql/data/" OCF_RESKEY_pghost=IP_address OCF_RESKEY_monitor_password="password" OCF_RESKEY_monitor_user=user OCF_RESKEY_pgdb=monitor /usr/lib/ocf/resource.d/heartbeat/pgsql monitor
 
@@ -197,7 +197,10 @@ The last parameter changes the order in which are services started and stopped.:
 
 After successful configuration of all services fine tuning of each of timeouts must take place. There is no general values of timeouts, but good start is the use of recommended ones from RA's scripts. 
 
-Setting up Owncloud
+TODO: we are changing our pacemaker configuration right now. This section
+will be added when things get sorted out.
+
+Setting up ownCloud
 -------------------
 
 In the next step, you will need to download and install ownCloud from the source archive.
@@ -208,7 +211,7 @@ official installation guide. Just put it in a directory specified in the Puppet'
 For the user SAML authentication to work properly, you need to fetch the 'user_saml' app
 from the `owncloud/apps`_ GitHub repository. It already contains our fixes of
 the 'user_saml' app. If you are interested in our modifications as described in
-the :ref:`cesnet-modifications` chapter, you are free to try the
+the :ref:`cesnet-modifications` chapter, you can use the
 `cesnet/owncloud-apps`_ repository instead.
 
 Then you create 'owncloud' DB table and user and go through the
@@ -240,7 +243,7 @@ according to your environment::
                 // eduID.cz + hostel WAYFlet
                 'discoURL' => 'https://ds.eduid.cz/wayf.php...'
 
-Last thing needed is to specify the sources of IdPs (Identity Providers) metadata.
+The last thing needed is to specify sources of IdPs (Identity Providers) metadata.
 This can be done in the 'config-metarefresh.php.erb' file::
                 
 	'eduidcz' => array(
@@ -256,7 +259,7 @@ This can be done in the 'config-metarefresh.php.erb' file::
 
 Metadata are then refreshed periodically by a cron job already installed by Puppet.
 
-User_saml configuration
+User_saml Configuration
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 The last step needed to get the user authentication running is to enable
