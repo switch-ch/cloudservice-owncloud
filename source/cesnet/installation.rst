@@ -181,6 +181,15 @@ All examples of Pacemaker configuration are meant to be used with the help of cr
         meta resource-stickiness=100 migration-threshold=10 target-role=Started
 
 Special database monitor is used for the monitoring of the PostgreSQL database. It's good to keep minimally one connection to the database unhanded by PgPool II so this monitor can use it.
+Another example is definition of PgPool II service based on our RA::
+
+        primitive pgpool-owncloud-postgres ocf:du:pgpool_ra.rhel \
+        params pgpool_conf="/pgpool_inst_path/etc/pgpool/pgpool.conf" pgpool_pcp="/pgpool_inst_path/etc/pgpool/pcp.conf" logfile="/log_path/pgpool/pgpool.log" pgdata="/pgsql_data_path/pgsql/data/" pghost=IP_address monitor_password=password monitor_user=user pgdb=monitor pgport=port \
+        meta resource-stickiness=10 migration-threshold=10 target-role=Started \
+        op monitor interval=60s timeout=40s on-fail=restart \
+        op start interval=0 timeout=60s on-fail=restart requires=fencing \
+        op stop interval=0 timeout=60s on-fail=fence
+
 All other services are configured in the same manner. Right parameters of different RAs can be tested by direct running of those scripts. For example the above database can be monitored by this command::
 
         OCF_ROOT=/usr/lib/ocf OCF_RESKEY_pgdata="/some_path/pgsql/data/" OCF_RESKEY_pghost=IP_address OCF_RESKEY_monitor_password="password" OCF_RESKEY_monitor_user=user OCF_RESKEY_pgdb=monitor /usr/lib/ocf/resource.d/heartbeat/pgsql monitor
