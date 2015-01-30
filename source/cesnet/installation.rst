@@ -147,7 +147,7 @@ deployed to all nodes.
 Pacemaker
 ---------
 
-The basic installation of Pacemaker HA manager on RHEL 6 system is not covered in this text and can be found elsewhere_. In this section, let us assume that fully functional installation of Pacemaker is installed on at least three hosts with working STONITHd and all necessary dependencies like, e.g., filesystem resources. We also assume that all necessary RAs are have been installed as part of the Pacemaker installation and placed in /usr/lib/ocf/resource.d/. The only remaining RA is the one for controlling PgPool II. This RA needs to be written, or, more conveniently, `CESNET version_` can be downloaded.
+The basic installation of Pacemaker HA manager on RHEL 6 system is not covered in this text and can be found elsewhere_. In this section, let us assume that fully functional Pacemaker is installed on at least three hosts with working STONITHd and all necessary dependencies like, e.g., filesystem resources. We also assume that all necessary RAs are have been installed as part of the Pacemaker installation and placed in /usr/lib/ocf/resource.d/. The only remaining RA is the one for controlling PgPool II. This RA needs to be written, or, more conveniently, `CESNET version_` can be downloaded.
 
 All examples of Pacemaker configuration are meant to be used with the help of crmshell_. Service definition may be the following::
 
@@ -158,7 +158,7 @@ All examples of Pacemaker configuration are meant to be used with the help of cr
         params pgdata="/some_path/pgsql/data/" pghost=IP_address monitor_password=password monitor_user=user pgdb=monitor \
         meta resource-stickiness=100 migration-threshold=10 target-role=Started
 
-Special database monitor is used for the monitoring of the PostgreSQL database. It's good to keep minimally one connection to the database unhanded by PgPool II so this monitor can use it.
+Special database monitor is used for the monitoring of the PostgreSQL database. We recommend keeping minimally one connection to the database unhanded by PgPool II so this monitor can use it.
 Another example is definition of PgPool II service based on our RA::
 
         primitive pgpool-owncloud-postgres ocf:du:pgpool_ra.rhel \
@@ -168,11 +168,11 @@ Another example is definition of PgPool II service based on our RA::
         op start interval=0 timeout=60s on-fail=restart requires=fencing \
         op stop interval=0 timeout=60s on-fail=fence
 
-All remaining necessary services are configured in the same manner. Right parameters of different RAs can be tested by direct running of those scripts. For example the database can be monitored by this command::
+All remaining necessary services are configured in the same manner. Suitable parameters of different RAs can be tested by direct running of those scripts. For example the database can be monitored by this command::
 
         OCF_ROOT=/usr/lib/ocf OCF_RESKEY_pgdata="/some_path/pgsql/data/" OCF_RESKEY_pghost=IP_address OCF_RESKEY_monitor_password="password" OCF_RESKEY_monitor_user=user OCF_RESKEY_pgdb=monitor /usr/lib/ocf/resource.d/heartbeat/pgsql monitor
 
-Next all location, colocation and order linkages must by specified. In order to achieve our configuration as described in architecture file next lines must be added in to Pacemaker configuration::
+Next all location, colocation, and order linkages must by specified. In order to achieve our configuration as described in architecture file next lines must be added into Pacemaker configuration::
 
         location l-PSQL_OC-fe4 PSQL_OC 600: fe4-priv
         location l-PSQL_OC-fe5 PSQL_OC 500: fe5-priv
@@ -180,7 +180,7 @@ Next all location, colocation and order linkages must by specified. In order to 
         location l-owncloud-web-fe5 owncloud-web 600: fe5-priv
 
 Location statement determines on which nodes the service should start with some priorities.
-Colocation is used to specify which services should be started together on the same host and which must be on different hosts. Each colocation has appropriate weight or inf and -inf are used for absolute meanings. Resolving of the colocation dependencies are being solved from right to left.::
+Colocation is used to specify which services should be started together on the same host and which must be on different hosts. Each colocation has appropriate weight or inf and -inf are used for absolute meanings. Resolving of the colocation dependencies is performed from right to left.::
 
         colocation c-FS-services inf: ( PSQL_OC owncloud-web ) FS
         colocation c-PSQL_OC-IP inf: PSQL_OC PSQL-ip
@@ -195,7 +195,7 @@ The last parameter changes the order in which are services started and stopped.:
         order o-owncloud_web-IP inf: owncloud-ip owncloud-web
         order o-owncloud_web-IPv6 inf: owncloud-ipv6 owncloud-web
 
-After successful configuration of all services fine tuning of each of timeouts must take place. There is no general values of timeouts, but good start is the use of recommended ones from RA's scripts. 
+After successful configuration of all services, fine tuning of timeout values is necessary according to overall behaviour of the system. There are no general values of timeouts, we recommend to start with the ones from RA scripts. 
 
 Setting up ownCloud
 -------------------
