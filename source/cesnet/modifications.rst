@@ -11,12 +11,11 @@ custom modifications. They are available at
 our `cesnet/owncloud-apps`_ fork. This chapter
 describes some of the modifications needed.
 
-User Authentication and Management
-----------------------------------
+User WebDAV Authentication
+--------------------------
 
-Most of our customizations went certainly to the
-authentication and user management functions. In our setup,
-the 'user_saml' app is responsible for this task. Fixing it
+In our setup, the 'user_saml' app is responsible for the task
+of authenticating and managing the user accounts. Fixing it
 as discussed in the :ref:`samlfix` section enabled users
 to log in and automatically create accounts.
 
@@ -32,19 +31,39 @@ use some WebDAV client. But clients needs the ownCloud password and this
 renders them completely unusable. To solve this, we have modded
 the 'user_saml' application so it adds extra fields
 to each user's 'Personal Settings' page, so that they can configure
-their clients.
+their clients properly.
 
 .. image:: images/modifications/setWDpwd.png
+
+Account consolidation
+---------------------
+
+Since we are operating with federated accounts, it could easily happen
+that some users have multiple accounts at multiple organization IdPs.
+Normally, we would create an independent ownCloud account for each organization's
+account the user has. But with consolidation, it is possible to map
+all user's IdP accounts to a single ownCloud account. So when the user
+leaves one organization and his account there is closed, he can still access
+the same ownCloud data using the second IdP's account he may have.
+
+.. NOTE::
+	This topic is still a 'work in progress' for us, as we have just
+	a basic support for this feature implemented. We are going to
+	collaborate with the Perun_ AAI developers and use Perun's
+	consolidation mechanisms.
+
 
 File Sharing
 ------------
 
+There were several improvement requests to the ownCloud 6 sharing
+mechanisms that we implemented ourselves (they were just too specific
+to our environment to be considered suitable for a pull request to upstream).
+
 Mail Notifications
 ------------------
-
-Theming
--------
 
 .. links:
 
 .. _`cesnet/owncloud-apps`: https://github.com/CESNET/owncloud-apps
+.. _Perun: https://github.com/CESNET/perun
