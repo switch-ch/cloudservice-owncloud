@@ -60,8 +60,16 @@ There were several improvement requests to the ownCloud 6 sharing
 mechanisms that we implemented ourselves (they were just too specific
 to our environment to be considered suitable for a pull request to upstream).
 
-Mail Notifications
-------------------
+By default, the share's autocomplete function offers users with usernames (and full names)
+of the other users as they start typing. In our environment, this has
+proven to be undesirable as our users cannot choose username. It is determined
+by the EPPN identifier sent to us by the user's IdP. For some organizations,
+an EPPN could be a sensitive information outside the organization itself, so we needed
+to disable the autocomplete function.
+
+But disabling it completely would worsen the user experience when adding shares.
+So we implemented an autocompletion from the user's contacts at least. You just need
+to import contacts you want to quickly share files to in the 'Contacts' app.
 
 .. links:
 
