@@ -50,7 +50,7 @@ Puppet
 Puppet client has to be installed on all nodes participating in the ownCloud cluster.
 All packages needed could be obtained from the Puppetlabs_ repository.
 You will need to install some Puppet version < 3.0, because the modules we use
-aren't tested with *Puppet 3.x* versions yet.
+haven't been tested with *Puppet 3.x* versions yet.
 
 There are two modes available when deploying the Puppet -- **standalone** client or **master/agent**.
 Our Puppet configuration is tested with the master/agent setup, but it should work fine even when using just
@@ -147,9 +147,9 @@ deployed to all nodes.
 Pacemaker
 ---------
 
-The basic installation of Pacemaker HA manager on RHEL 6 system is not goal of this text and can be find elsewhere_. For this section let's assume that fully functional installation of Pacemaker is installed on at least three hosts with working STONITHd and all necessary dependencies like filesystem resources and so on. Let's also assume that all necessary RAs are have been installed as part of the Pacemaker installation and placed in /usr/lib/ocf/resource.d/. Only missing RA is one for controlling PgPool II that needs to be written or `CESNET version_` can be downloaded.
+The basic installation of Pacemaker HA manager on RHEL 6 system is not covered in this text and can be found elsewhere_. In this section, let us assume that fully functional Pacemaker is installed on at least three hosts with working STONITHd and all necessary dependencies like, e.g., filesystem resources. We also assume that all necessary RAs are have been installed as part of the Pacemaker installation and placed in /usr/lib/ocf/resource.d/. The only remaining RA is the one for controlling PgPool II. This RA needs to be written, or, more conveniently, `CESNET version_` can be downloaded.
 
-All examples of Pacemaker configuration are meant to be used with the help of crmshell_ and service definition may looks like this::
+All examples of Pacemaker configuration are meant to be used with the help of crmshell_. Service definition may be the following::
 
         primitive PSQL_OC pgsql \
         op monitor interval=60s timeout=30s on-fail=restart \
@@ -158,19 +158,46 @@ All examples of Pacemaker configuration are meant to be used with the help of cr
         params pgdata="/some_path/pgsql/data/" pghost=IP_address monitor_password=password monitor_user=user pgdb=monitor \
         meta resource-stickiness=100 migration-threshold=10 target-role=Started
 
-Special database monitor is used for the monitoring of the PostgreSQL database. It's good to keep minimally one connection to the database unhanded by PgPool II so this monitor can use it.
-All other services are configured in the same manner. Right parameters of different RAs can be tested by direct running of those scripts. For example the above database can be monitored by this command::
+Special database monitor is used for the monitoring of the PostgreSQL database. We recommend keeping minimally one connection to the database unhanded by PgPool II so this monitor can use it.
+Another example is definition of PgPool II service based on our RA::
+
+        primitive pgpool-owncloud-postgres ocf:du:pgpool_ra.rhel \
+        params pgpool_conf="/pgpool_inst_path/etc/pgpool/pgpool.conf" pgpool_pcp="/pgpool_inst_path/etc/pgpool/pcp.conf" logfile="/log_path/pgpool/pgpool.log" pgdata="/pgsql_data_path/pgsql/data/" pghost=IP_address monitor_password=password monitor_user=user pgdb=monitor pgport=port \
+        meta resource-stickiness=10 migration-threshold=10 target-role=Started \
+        op monitor interval=60s timeout=40s on-fail=restart \
+        op start interval=0 timeout=60s on-fail=restart requires=fencing \
+        op stop interval=0 timeout=60s on-fail=fence
+
+All remaining necessary services are configured in the same manner. Suitable parameters of different RAs can be tested by direct running of those scripts. For example the database can be monitored by this command::
 
         OCF_ROOT=/usr/lib/ocf OCF_RESKEY_pgdata="/some_path/pgsql/data/" OCF_RESKEY_pghost=IP_address OCF_RESKEY_monitor_password="password" OCF_RESKEY_monitor_user=user OCF_RESKEY_pgdb=monitor /usr/lib/ocf/resource.d/heartbeat/pgsql monitor
 
-Next all location, colocation and order linkages must by specified. 
+Next all location, colocation, and order linkages must by specified. In order to achieve our configuration as described in architecture file next lines must be added into Pacemaker configuration::
 
-After successful configuration of all services fine tuning of each of timeouts must take place. There is no general values of timeouts, but good start is the use of recommended ones from RA's scripts. 
+        location l-PSQL_OC-fe4 PSQL_OC 600: fe4-priv
+        location l-PSQL_OC-fe5 PSQL_OC 500: fe5-priv
+        location l-owncloud-web-fe4 owncloud-web 500: fe4-priv
+        location l-owncloud-web-fe5 owncloud-web 600: fe5-priv
 
-TODO: we are changing our pacemaker configuration right now. This section
-will be added when things get sorted out.
+Location statement determines on which nodes the service should start with some priorities.
+Colocation is used to specify which services should be started together on the same host and which must be on different hosts. Each colocation has appropriate weight or inf and -inf are used for absolute meanings. Resolving of the colocation dependencies is performed from right to left.::
 
-Setting up Owncloud
+        colocation c-FS-services inf: ( PSQL_OC owncloud-web ) FS
+        colocation c-PSQL_OC-IP inf: PSQL_OC PSQL-ip
+        colocation c-owncloud_web-IP inf: owncloud-web owncloud-ip owncloud-ipv6 pgpool-owncloud-postgres
+
+So the last rule means that owncloud-web is run where owncloud-ip is running and that is on the same node as owncloud-ipv6 and that is where pgpool-owncloud-postgres service is running.
+The last parameter changes the order in which are services started and stopped.::
+
+        order o-FS-services inf: FS ( PSQL_OC owncloud-web )
+        order o-PSQL-Owncloud_web inf: PSQL_OC pgpool-owncloud-postgres owncloud-web
+        order o-PSQL_OC-IP inf: PSQL-ip PSQL_OC
+        order o-owncloud_web-IP inf: owncloud-ip owncloud-web
+        order o-owncloud_web-IPv6 inf: owncloud-ipv6 owncloud-web
+
+After successful configuration of all services, fine tuning of timeout values is necessary according to overall behaviour of the system. There are no general values of timeouts, we recommend to start with the ones from RA scripts. 
+
+Setting up ownCloud
 -------------------
 
 In the next step, you will need to download and install ownCloud from the source archive.
@@ -181,7 +208,7 @@ official installation guide. Just put it in a directory specified in the Puppet'
 For the user SAML authentication to work properly, you need to fetch the 'user_saml' app
 from the `owncloud/apps`_ GitHub repository. It already contains our fixes of
 the 'user_saml' app. If you are interested in our modifications as described in
-the :ref:`cesnet-modifications` chapter, you are free to try the
+the :ref:`cesnet-modifications` chapter, you can use the
 `cesnet/owncloud-apps`_ repository instead.
 
 Then you create 'owncloud' DB table and user and go through the
@@ -213,7 +240,7 @@ according to your environment::
                 // eduID.cz + hostel WAYFlet
                 'discoURL' => 'https://ds.eduid.cz/wayf.php...'
 
-Last thing needed is to specify the sources of IdPs (Identity Providers) metadata.
+The last thing needed is to specify sources of IdPs (Identity Providers) metadata.
 This can be done in the 'config-metarefresh.php.erb' file::
                 
 	'eduidcz' => array(
@@ -229,7 +256,7 @@ This can be done in the 'config-metarefresh.php.erb' file::
 
 Metadata are then refreshed periodically by a cron job already installed by Puppet.
 
-User_saml configuration
+User_saml Configuration
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 The last step needed to get the user authentication running is to enable
