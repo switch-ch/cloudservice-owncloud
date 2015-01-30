@@ -197,9 +197,6 @@ The last parameter changes the order in which are services started and stopped.:
 
 After successful configuration of all services fine tuning of each of timeouts must take place. There is no general values of timeouts, but good start is the use of recommended ones from RA's scripts. 
 
-TODO: we are changing our pacemaker configuration right now. This section
-will be added when things get sorted out.
-
 Setting up ownCloud
 -------------------
 
