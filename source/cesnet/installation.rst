@@ -168,16 +168,34 @@ Another example is definition of PgPool II service based on our RA::
         op start interval=0 timeout=60s on-fail=restart requires=fencing \
         op stop interval=0 timeout=60s on-fail=fence
 
-All other services are configured in the same manner. Right parameters of different RAs can be tested by direct running of those scripts. For example the above database can be monitored by this command::
+All other services are configured in the same manner. Right parameters of different RAs can be tested by direct running of those scripts. For example the database can be monitored by this command::
 
         OCF_ROOT=/usr/lib/ocf OCF_RESKEY_pgdata="/some_path/pgsql/data/" OCF_RESKEY_pghost=IP_address OCF_RESKEY_monitor_password="password" OCF_RESKEY_monitor_user=user OCF_RESKEY_pgdb=monitor /usr/lib/ocf/resource.d/heartbeat/pgsql monitor
 
-Next all location, colocation and order linkages must by specified. 
+Next all location, colocation and order linkages must by specified. In order to achieve our configuration as described in architecture file next lines must be added in to Pacemaker configuration::
+
+        location l-PSQL_OC-fe4 PSQL_OC 600: fe4-priv
+        location l-PSQL_OC-fe5 PSQL_OC 500: fe5-priv
+        location l-owncloud-web-fe4 owncloud-web 500: fe4-priv
+        location l-owncloud-web-fe5 owncloud-web 600: fe5-priv
+
+Location statement determines on which nodes the service should start with some priorities.
+Colocation is used to specify which services should be started together on the same host and which must be on different hosts. Each colocation has appropriate weight or inf and -inf are used for absolute meanings. Resolving of the colocation dependencies are being solved from right to left.::
+
+        colocation c-FS-services inf: ( PSQL_OC owncloud-web ) FS
+        colocation c-PSQL_OC-IP inf: PSQL_OC PSQL-ip
+        colocation c-owncloud_web-IP inf: owncloud-web owncloud-ip owncloud-ipv6 pgpool-owncloud-postgres
+
+So the last rule means that owncloud-web is run where owncloud-ip is running and that is on the same node as owncloud-ipv6 and that is where pgpool-owncloud-postgres service is running.
+The last parameter changes the order in which are services started and stopped.::
+
+        order o-FS-services inf: FS ( PSQL_OC owncloud-web )
+        order o-PSQL-Owncloud_web inf: PSQL_OC pgpool-owncloud-postgres owncloud-web
+        order o-PSQL_OC-IP inf: PSQL-ip PSQL_OC
+        order o-owncloud_web-IP inf: owncloud-ip owncloud-web
+        order o-owncloud_web-IPv6 inf: owncloud-ipv6 owncloud-web
 
 After successful configuration of all services fine tuning of each of timeouts must take place. There is no general values of timeouts, but good start is the use of recommended ones from RA's scripts. 
-
-TODO: we are changing our pacemaker configuration right now. This section
-will be added when things get sorted out.
 
 Setting up Owncloud
 -------------------
