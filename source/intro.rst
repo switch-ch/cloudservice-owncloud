@@ -39,14 +39,14 @@ History
 This book is a collaborative effort of the European NREN community, organized
 in TERENA and GEANT. It has started as a project of the GN3+ SA7 project.
 
-The technical parts are based on the implementation of ownCloud at SWITCH
-(SWITCHdrive_). It can serve as one example of how one might technically build such a service.
+The technical parts are based on the implemention of ownCloud at SWITCH, with
+the SWITCHdrive_ project. It can serve as one example of how one might
+technically build such a service.
 
 As of October 2014 a section describing the implementation of ownCloud at GARR,
 with the GARRbox_ service, has been added.
 
-In January 2015, CESNET has added a description of its ownCloud service. 
-
+In January 2015, CESNET has added a description of its `ownCloud@CESNET`_ service. 
 
 Authors
 -------
