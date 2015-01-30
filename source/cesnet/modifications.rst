@@ -63,14 +63,19 @@ to our environment to be considered suitable for a pull request to upstream).
 
 By default, the share's autocomplete function offers users with usernames (and full names)
 of the other users as they start typing. In our environment, this has
-proven to be undesirable as our users cannot choose username. It is determined
-by the EPPN identifier sent to us by the user's IdP. For some organizations,
-an EPPN could be a sensitive information outside the organization itself, so we needed
+proven to be undesirable as our users cannot choose usernames. It is determined
+by the EPPN identifier sent to us by the user's IdP. In some organizations,
+an EPPN is considered to be a sensitive information, so we were asked
 to disable the autocomplete function.
 
-But disabling it completely would worsen the user experience when adding shares.
+On the other hand, disabling autocomplete function would worsen the user experience when adding shares.
 So we implemented an autocompletion from the user's contacts at least. You just need
 to import contacts you want to quickly share files to in the 'Contacts' app.
+
+We plan to integrate group management in ownCloud with our user management
+system Perun. Perun defines groups and handles user membership in them, it
+would be convenient for the users to be able to use the groups in all
+systems we operate.
 
 .. links:
 
