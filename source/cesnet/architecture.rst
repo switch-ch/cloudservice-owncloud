@@ -4,7 +4,7 @@ CESNET Architecture
 The following picture shows the current architecture of the
 ownCloud service at CESNET.
 
-.. image:: images/architecture/CesnetOcArchitecture1.0.png
+.. image:: images/architecture/CesnetOcArchitecture1.2.png
 
 Our ownCloud architecture is built on top of HA (High Availability) cluster
 managed by Pacemaker_. The cluster consists of 5 equivalent nodes.
