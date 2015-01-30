@@ -19,15 +19,15 @@ of authenticating and managing the user accounts. Fixing it
 as discussed in the :ref:`samlfix` section enabled users
 to log in and automatically create accounts.
 
-But there were still problems that needed solving. Automatical
+But there were still problems that needed to be solved. Automatical
 account creation had a side effect. Since users are entering their
-login credentials at their organizations IdP, ownCloud side has no
+login credentials at their organizations IdP, ownCloud has no
 way knowing the user's password. That way, the 'user_saml' app must
 set a long enough random password for each new ownCloud user
 automatically created.
 
 Users don't need to know their ownCloud password as long as they don't
-use some WebDAV client. But clients needs the ownCloud password and this
+use some WebDAV client. But clients need the ownCloud password and this
 renders them completely unusable. To solve this, we have modded
 the 'user_saml' application so it adds extra fields
 to each user's 'Personal Settings' page, so that they can configure
@@ -35,10 +35,11 @@ their clients properly.
 
 .. image:: images/modifications/setWDpwd.png
 
-Account consolidation
+Account Consolidation
 ---------------------
 
-Since we are operating with federated accounts, it could easily happen
+Since we are operating the service
+with federated accounts, it could easily happen
 that some users have multiple accounts at multiple organization IdPs.
 Normally, we would create an independent ownCloud account for each organization's
 account the user has. But with consolidation, it is possible to map
