@@ -255,6 +255,8 @@ This can be done in the 'config-metarefresh.php.erb' file::
 	)
 
 Metadata are then refreshed periodically by a cron job already installed by Puppet.
+More generic information about setting your own SP in the SimpleSAMLphp could be found
+in the official configuration guide_.
 
 User_saml Configuration
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -284,3 +286,4 @@ on its testing page::
 .. _`cesnet/owncloud-apps`: https://github.com/CESNET/owncloud-apps
 .. _elsewhere: http://clusterlabs.org/quickstart-redhat.html
 .. _crmshell: http://crmsh.github.io/
+.. _guide: https://simplesamlphp.org/docs/stable/simplesamlphp-sp

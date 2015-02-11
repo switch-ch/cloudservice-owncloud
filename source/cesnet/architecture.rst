@@ -20,7 +20,7 @@ Our system consists of the following components and services:
 * PgPool proxy
 * Pacemaker HA services
 * Icinga & Munin monitoring servers
-* eduID and eduGAIN authentication services
+* eduID federated authentication service
 * GPFS storage
 * TSM server for backups
 
@@ -199,7 +199,6 @@ further analyzed and queried with LogStash and ElasticSearch.
 .. _recommendations: http://wiki.postgresql.org/wiki/Number_Of_Database_Connections#How_to_Find_the_Optimal_Database_Connection_Pool_Size
 .. _SimpleSAMLphp: https://simplesamlphp.org/
 .. _eduId: http://eduid.cz/
-.. _eduGAIN: http://www.geant.net/service/eduGAIN/Pages/home.aspx
 .. _`user_saml`: https://github.com/owncloud/apps/tree/master/user_saml
 .. _`user_shibboleth`: https://github.com/AndreasErgenzinger/user_shibboleth
 .. _WAYF: https://www.eduid.cz/en/tech/wayf
