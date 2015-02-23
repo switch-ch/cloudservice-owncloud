@@ -4,7 +4,7 @@ CESNET Architecture
 The following picture shows the current architecture of the
 ownCloud service at CESNET.
 
-.. image:: images/architecture/CesnetOcArchitecture1.2.png
+.. image:: images/architecture/CesnetOcArchitecture1_2.png
 
 Our ownCloud architecture is built on top of HA (High Availability) cluster
 managed by Pacemaker_. The cluster consists of 5 equivalent nodes.
@@ -115,7 +115,7 @@ resource manager for all services and applications. Main advantages of this setu
   * automatic distribution of services based on their mutual linkage,
   * periodical checks if all services are running,
   * and automatic failover.
-    
+
 We use basic Resource Agents (RAs) available from system repository for controlling Apache,
 IP aliases and PostgreSQL services. Due to the lack of repository RA for PgPool II, we
 developed our own RA script.
@@ -130,9 +130,9 @@ guarantees shutdown of all services in a contrary order if necessary.
 User Authentication
 -------------------
 
-Authentication of users is based on SAML. It relies on the SimpleSAMLphp_ backend application for 
-authentication and providing user's metadata. SimpleSAMLphp backend is configured with eduID_ IdP (Identity Providers) metadata and acts like an SP (Service Provider) in the federations. 
-When users try to log in, they are presented with a WAYF_ page, where they can pick their home 
+Authentication of users is based on SAML. It relies on the SimpleSAMLphp_ backend application for
+authentication and providing user's metadata. SimpleSAMLphp backend is configured with eduID_ IdP (Identity Providers) metadata and acts like an SP (Service Provider) in the federations.
+When users try to log in, they are presented with a WAYF_ page, where they can pick their home
 organizations. They are then redirected to their organization's IdP login page where they log in.
 After a successful log in, we get all necessary information about a user (EPPN, e-mail) from user's home organization IdP.
 
@@ -152,7 +152,7 @@ through Fibre Channel infrastructure to all frontend nodes. We use this filesyst
 user data, web interface files for the webserver, as well as logging of all installation components.
 
 Data backups are realized by a GPFS utility mmbackup. This utility scans the whole filesystem
-(using GPFS inode scan interface) and passes a changed, new or deleted files to TSM (Tivoli Storage 
+(using GPFS inode scan interface) and passes a changed, new or deleted files to TSM (Tivoli Storage
 Manager) server. TSM then runs selective (full) backup (or expiration when file deleted) on those files. We retain a history of 2 versions of the backed files in TSM for 30 days. TSM is being used with IBM TS3500 tape library as a persistent storage device for holding backups. OwnCloud backups are run periodically once a day.
 
 Before each backup run, PostgreSQL database is being dumped using pg_dump utility.
