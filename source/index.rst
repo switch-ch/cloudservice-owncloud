@@ -13,11 +13,16 @@ Contents:
 
    intro
    service-description
+   experiences
    switch/architecture
    switch/installation
    garr/architecture
    garr/installation
-   experiences
+   cesnet/service-description
+   cesnet/architecture
+   cesnet/installation
+   cesnet/modifications
+   cesnet/experiences
 
 Indices and tables
 ==================
